@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Smart Reforço</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --sidebar-width: 250px;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        .sidebar .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-divider {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 15px 0;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .crm-header {
+            background: white;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .crm-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: #1e293b;
+        }
+        
+        /* Filters */
+        .filters-bar {
+            background: white;
+            padding: 12px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .filter-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        /* Kanban Board */
+        .kanban-container {
+            flex: 1;
+            overflow-x: auto;
+            padding: 20px;
+        }
+        
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            height: 100%;
+            min-width: max-content;
+        }
+        
+        .kanban-column {
+            width: 320px;
+            background: #f8fafc;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+        
+        .column-header {
+            padding: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid;
+            flex-shrink: 0;
+        }
+        
+        .column-header .count {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .column-cards {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        
+        /* Cards */
+        .deal-card {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            cursor: grab;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .deal-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .deal-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .deal-card .title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .deal-card .subtitle {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        
+        .deal-card .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .deal-card .value {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .deal-card .unidade-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+        
+        .deal-card .actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .deal-card:hover .actions {
+            opacity: 1;
+        }
+        
+        /* Add Card Button */
+        .add-card-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-card-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        
+        /* Drag over effect */
+        .column-cards.drag-over {
+            background: rgba(79, 70, 229, 0.05);
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-item .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-item .label {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        
+        /* Modal */
+        .modal-lg-custom { max-width: 700px; }
+        
+        .modal-header { border-bottom: 1px solid #e2e8f0; }
+        .modal-footer { border-top: 1px solid #e2e8f0; }
+        
+        /* Unidades sidebar list */
+        .unidade-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .unidade-item:hover, .unidade-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .unidade-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-kanban"></i> CRM Smart
+        </div>
+        
+        <nav>
+            <a href="/leads" class="nav-link">
+                <i class="bi bi-people"></i> Leads
+            </a>
+            <a href="/" class="nav-link">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+            </a>
+            <a href="/crm" class="nav-link active">
+                <i class="bi bi-kanban"></i> Pipeline
+            </a>
+            <a href="/bot" class="nav-link">
+                <i class="bi bi-robot"></i> Bot IA
+            </a>
+        </nav>
+        
+        <div class="nav-divider"></div>
+        
+        <div class="mb-2" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+            UNIDADES
+        </div>
+        <div id="unidades-list"></div>
+        
+        <button class="btn btn-outline-light btn-sm mt-3 w-100" onclick="openUnidadeModal()">
+            <i class="bi bi-plus"></i> Nova Unidade
+        </button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="crm-header">
+            <div>
+                <h1>Pipeline de Vendas</h1>
+                <small class="text-muted" id="pipeline-name"></small>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="number" id="stat-total">0</div>
+                    <div class="label">Negócios</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="stat-valor">R$ 0</div>
+                    <div class="label">Valor Total</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters-bar">
+            <select class="filter-select" id="filter-pipeline" onchange="loadPipeline()">
+                <option value="1">Pipeline Vendas</option>
+            </select>
+            <select class="filter-select" id="filter-unidade" onchange="loadNegocios()">
+                <option value="">Todas Unidades</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="openNegocioModal()">
+                <i class="bi bi-plus"></i> Novo Negócio
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="openImportModal()">
+                <i class="bi bi-download"></i> Importar Leads
+            </button>
+        </div>
+        
+        <!-- Kanban Board -->
+        <div class="kanban-container">
+            <div class="kanban-board" id="kanban-board">
+                <!-- Columns will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Novo Negócio -->
+    <div class="modal fade" id="negocioModal" tabindex="-1">
+        <div class="modal-dialog modal-lg-custom">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Negócio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="negocioForm">
+                        <input type="hidden" id="negocio-id">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label class="form-label">Título</label>
+                                <input type="text" class="form-control" id="negocio-titulo" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Valor (R$)</label>
+                                <input type="number" class="form-control" id="negocio-valor" value="0">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Estágio</label>
+                                <select class="form-select" id="negocio-estagio"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Unidade</label>
+                                <select class="form-select" id="negocio-unidade">
+                                    <option value="">Nenhuma</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Probabilidade (%)</label>
+                                <input type="number" class="form-control" id="negocio-prob" value="50" min="0" max="100">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Responsável</label>
+                                <input type="text" class="form-control" id="negocio-responsavel">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Previsão de Fechamento</label>
+                                <input type="date" class="form-control" id="negocio-data">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Vincular Lead</label>
+                            <select class="form-select" id="negocio-lead">
+                                <option value="">Nenhum</option>
+                            </select>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-control" id="negocio-descricao" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNegocio()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Nova Unidade -->
+    <div class="modal fade" id="unidadeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Unidade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="unidade-nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="unidade-descricao">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cor</label>
+                        <input type="color" class="form-control form-control-color" id="unidade-cor" value="#4f46e5">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUnidade()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Importar Leads -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Importar Leads para Pipeline</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por Cidade</label>
+                            <select class="form-select" id="import-cidade" onchange="loadLeadsForImport()">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por Status</label>
+                            <select class="form-select" id="import-status" onchange="loadLeadsForImport()">
+                                <option value="">Todos</option>
+                                <option value="novo">Novo</option>
+                                <option value="em_contato">Em Contato</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unidade de Destino</label>
+                            <select class="form-select" id="import-unidade"></select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="import-select-all" onchange="toggleSelectAll()">
+                            <label class="form-check-label">Selecionar todos</label>
+                        </div>
+                    </div>
+                    <div id="import-leads-list" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+                <div class="modal-footer">
+                    <span class="me-auto text-muted" id="import-count">0 leads selecionados</span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="importLeads()">
+                        <i class="bi bi-download"></i> Importar para Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let estagios = [];
+        let negocios = [];
+        let unidades = [];
+        let currentPipelineId = 1;
+        let draggedCard = null;
+        
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUnidades();
+            loadPipelines();
+            loadCidades();
+        });
+        
+        // ==================== UNIDADES ====================
+        function loadUnidades() {
+            fetch('/api/unidades')
+                .then(r => r.json())
+                .then(data => {
+                    unidades = data;
+                    renderUnidadesSidebar();
+                    populateUnidadeSelects();
+                });
+        }
+        
+        function renderUnidadesSidebar() {
+            const list = document.getElementById('unidades-list');
+            list.innerHTML = unidades.map(u => `
+                <div class="unidade-item" onclick="filterByUnidade(${u.id})">
+                    <span class="unidade-dot" style="background: ${u.cor}"></span>
+                    ${u.nome}
+                </div>
+            `).join('');
+        }
+        
+        function populateUnidadeSelects() {
+            const html = '<option value="">Nenhuma</option>' + 
+                unidades.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+            
+            document.getElementById('filter-unidade').innerHTML = '<option value="">Todas Unidades</option>' + 
+                unidades.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+            document.getElementById('negocio-unidade').innerHTML = html;
+            document.getElementById('import-unidade').innerHTML = html;
+        }
+        
+        function filterByUnidade(id) {
+            document.getElementById('filter-unidade').value = id;
+            loadNegocios();
+        }
+        
+        function openUnidadeModal() {
+            document.getElementById('unidade-nome').value = '';
+            document.getElementById('unidade-descricao').value = '';
+            document.getElementById('unidade-cor').value = '#4f46e5';
+            new bootstrap.Modal(document.getElementById('unidadeModal')).show();
+        }
+        
+        function saveUnidade() {
+            fetch('/api/unidades', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    nome: document.getElementById('unidade-nome').value,
+                    descricao: document.getElementById('unidade-descricao').value,
+                    cor: document.getElementById('unidade-cor').value
+                })
+            })
+            .then(r => r.json())
+            .then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('unidadeModal')).hide();
+                loadUnidades();
+            });
+        }
+        
+        // ==================== PIPELINES ====================
+        function loadPipelines() {
+            fetch('/api/crm/pipelines')
+                .then(r => r.json())
+                .then(data => {
+                    const select = document.getElementById('filter-pipeline');
+                    select.innerHTML = data.map(p => 
+                        `<option value="${p.id}">${p.nome}</option>`
+                    ).join('');
+                    loadPipeline();
+                });
+        }
+        
+        function loadPipeline() {
+            currentPipelineId = document.getElementById('filter-pipeline').value;
+            
+            fetch(`/api/crm/pipelines/${currentPipelineId}/estagios`)
+                .then(r => r.json())
+                .then(data => {
+                    estagios = data;
+                    renderKanban();
+                    populateEstagioSelect();
+                    loadNegocios();
+                });
+        }
+        
+        function populateEstagioSelect() {
+            document.getElementById('negocio-estagio').innerHTML = estagios.map(e => 
+                `<option value="${e.id}">${e.nome}</option>`
+            ).join('');
+        }
+        
+        // ==================== KANBAN ====================
+        function renderKanban() {
+            const board = document.getElementById('kanban-board');
+            board.innerHTML = estagios.map(e => `
+                <div class="kanban-column" data-estagio="${e.id}">
+                    <div class="column-header" style="border-color: ${e.cor}">
+                        <span>${e.nome}</span>
+                        <span class="count" id="count-${e.id}">0</span>
+                    </div>
+                    <div class="column-cards" id="cards-${e.id}"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event, ${e.id})">
+                    </div>
+                    <div style="padding: 12px;">
+                        <button class="add-card-btn" onclick="openNegocioModal(${e.id})">
+                            <i class="bi bi-plus"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadNegocios() {
+            const unidadeId = document.getElementById('filter-unidade').value;
+            let url = `/api/crm/negocios?pipeline_id=${currentPipelineId}`;
+            if (unidadeId) url += `&unidade_id=${unidadeId}`;
+            
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    negocios = data;
+                    renderCards();
+                    updateStats();
+                });
+        }
+        
+        function renderCards() {
+            // Limpar todos os containers
+            estagios.forEach(e => {
+                document.getElementById(`cards-${e.id}`).innerHTML = '';
+                document.getElementById(`count-${e.id}`).textContent = '0';
+            });
+            
+            // Agrupar por estágio
+            const byEstagio = {};
+            negocios.forEach(n => {
+                if (!byEstagio[n.estagio_id]) byEstagio[n.estagio_id] = [];
+                byEstagio[n.estagio_id].push(n);
+            });
+            
+            // Renderizar cards
+            Object.keys(byEstagio).forEach(estagioId => {
+                const container = document.getElementById(`cards-${estagioId}`);
+                const countEl = document.getElementById(`count-${estagioId}`);
+                if (!container) return;
+                
+                countEl.textContent = byEstagio[estagioId].length;
+                
+                container.innerHTML = byEstagio[estagioId].map(n => `
+                    <div class="deal-card" draggable="true" data-id="${n.id}"
+                         ondragstart="handleDragStart(event, ${n.id})"
+                         ondragend="handleDragEnd(event)"
+                         style="border-left-color: ${n.estagio_cor}"
+                         onclick="openNegocioModal(null, ${n.id})">
+                        <div class="d-flex justify-content-between">
+                            <div class="title">${n.titulo}</div>
+                            <div class="actions">
+                                <i class="bi bi-whatsapp text-success" 
+                                   onclick="event.stopPropagation(); openChat(${n.lead_id})"
+                                   title="WhatsApp"></i>
+                            </div>
+                        </div>
+                        <div class="subtitle">
+                            ${n.lead_telefone ? `<i class="bi bi-telephone"></i> ${n.lead_telefone}` : ''}
+                        </div>
+                        <div class="meta">
+                            <span class="value">${n.valor ? 'R$ ' + n.valor.toLocaleString() : ''}</span>
+                            ${n.unidade_nome ? `<span class="unidade-badge">${n.unidade_nome}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+        
+        function updateStats() {
+            document.getElementById('stat-total').textContent = negocios.length;
+            const total = negocios.reduce((sum, n) => sum + (n.valor || 0), 0);
+            document.getElementById('stat-valor').textContent = 'R$ ' + total.toLocaleString();
+        }
+        
+        // ==================== DRAG & DROP ====================
+        function handleDragStart(event, id) {
+            draggedCard = id;
+            event.target.classList.add('dragging');
+        }
+        
+        function handleDragEnd(event) {
+            event.target.classList.remove('dragging');
+            document.querySelectorAll('.column-cards').forEach(c => c.classList.remove('drag-over'));
+        }
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(event, estagioId) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedCard) return;
+            
+            fetch(`/api/crm/negocios/${draggedCard}/mover`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ estagio_id: estagioId })
+            })
+            .then(r => r.json())
+            .then(() => {
+                loadNegocios();
+            });
+            
+            draggedCard = null;
+        }
+        
+        // ==================== NEGÓCIOS ====================
+        function openNegocioModal(estagioId = null, negocioId = null) {
+            document.getElementById('negocioForm').reset();
+            document.getElementById('negocio-id').value = '';
+            
+            if (estagioId) {
+                document.getElementById('negocio-estagio').value = estagioId;
+            }
+            
+            if (negocioId) {
+                // Editar existente
+                const neg = negocios.find(n => n.id === negocioId);
+                if (neg) {
+                    document.getElementById('negocio-id').value = neg.id;
+                    document.getElementById('negocio-titulo').value = neg.titulo;
+                    document.getElementById('negocio-valor').value = neg.valor || 0;
+                    document.getElementById('negocio-estagio').value = neg.estagio_id;
+                    document.getElementById('negocio-unidade').value = neg.unidade_id || '';
+                    document.getElementById('negocio-prob').value = neg.probabilidade || 50;
+                    document.getElementById('negocio-responsavel').value = neg.responsavel || '';
+                    document.getElementById('negocio-data').value = neg.data_previsao || '';
+                    document.getElementById('negocio-lead').value = neg.lead_id || '';
+                    document.getElementById('negocio-descricao').value = neg.descricao || '';
+                }
+            }
+            
+            // Carregar leads para o select
+            loadLeadsForSelect();
+            
+            new bootstrap.Modal(document.getElementById('negocioModal')).show();
+        }
+        
+        function loadLeadsForSelect() {
+            fetch('/api/whatsapp/leads-for-bulk?limit=200')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('negocio-lead').innerHTML = '<option value="">Nenhum</option>' +
+                        data.leads.map(l => `<option value="${l.id}">${l.nome} - ${l.telefone}</option>`).join('');
+                });
+        }
+        
+        function saveNegocio() {
+            const id = document.getElementById('negocio-id').value;
+            const data = {
+                titulo: document.getElementById('negocio-titulo').value,
+                valor: parseFloat(document.getElementById('negocio-valor').value) || 0,
+                estagio_id: parseInt(document.getElementById('negocio-estagio').value),
+                unidade_id: document.getElementById('negocio-unidade').value || null,
+                probabilidade: parseInt(document.getElementById('negocio-prob').value),
+                responsavel: document.getElementById('negocio-responsavel').value,
+                data_previsao: document.getElementById('negocio-data').value || null,
+                lead_id: document.getElementById('negocio-lead').value || null,
+                descricao: document.getElementById('negocio-descricao').value,
+                pipeline_id: currentPipelineId
+            };
+            
+            const url = id ? `/api/crm/negocios/${id}` : '/api/crm/negocios';
+            const method = id ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(() => {
+                bootstrap.Modal.getInstance(document.getElementById('negocioModal')).hide();
+                loadNegocios();
+            });
+        }
+        
+        // ==================== IMPORTAR LEADS ====================
+        let leadsParaImportar = [];
+        let leadsSelecionados = new Set();
+        
+        function openImportModal() {
+            leadsSelecionados.clear();
+            loadLeadsForImport();
+            new bootstrap.Modal(document.getElementById('importModal')).show();
+        }
+        
+        function loadCidades() {
+            fetch('/api/cidades')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('import-cidade').innerHTML = '<option value="">Todas</option>' +
+                        data.map(c => `<option value="${c}">${c}</option>`).join('');
+                });
+        }
+        
+        function loadLeadsForImport() {
+            const cidade = document.getElementById('import-cidade').value;
+            const status = document.getElementById('import-status').value;
+            let url = '/api/whatsapp/leads-for-bulk?limit=200';
+            if (cidade) url += `&cidade=${cidade}`;
+            if (status) url += `&status=${status}`;
+            
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    leadsParaImportar = data.leads;
+                    renderLeadsForImport();
+                });
+        }
+        
+        function renderLeadsForImport() {
+            const list = document.getElementById('import-leads-list');
+            list.innerHTML = leadsParaImportar.map(l => `
+                <div class="form-check py-2 border-bottom">
+                    <input class="form-check-input" type="checkbox" id="lead-${l.id}"
+                           ${leadsSelecionados.has(l.id) ? 'checked' : ''}
+                           onchange="toggleLeadSelect(${l.id})">
+                    <label class="form-check-label" for="lead-${l.id}">
+                        <strong>${l.nome}</strong> - ${l.telefone}
+                        <br><small class="text-muted">${l.cidade} | ${l.status}</small>
+                    </label>
+                </div>
+            `).join('');
+            updateImportCount();
+        }
+        
+        function toggleLeadSelect(id) {
+            if (leadsSelecionados.has(id)) {
+                leadsSelecionados.delete(id);
+            } else {
+                leadsSelecionados.add(id);
+            }
+            updateImportCount();
+        }
+        
+        function toggleSelectAll() {
+            const checked = document.getElementById('import-select-all').checked;
+            if (checked) {
+                leadsParaImportar.forEach(l => leadsSelecionados.add(l.id));
+            } else {
+                leadsSelecionados.clear();
+            }
+            renderLeadsForImport();
+        }
+        
+        function updateImportCount() {
+            document.getElementById('import-count').textContent = `${leadsSelecionados.size} leads selecionados`;
+        }
+        
+        function importLeads() {
+            if (leadsSelecionados.size === 0) {
+                alert('Selecione pelo menos um lead');
+                return;
+            }
+            
+            const unidadeId = document.getElementById('import-unidade').value;
+            const estagioId = estagios[0]?.id || 1;
+            
+            // Criar negócio para cada lead
+            const promises = Array.from(leadsSelecionados).map(leadId => 
+                fetch('/api/crm/lead-to-negocio', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        lead_id: leadId,
+                        pipeline_id: currentPipelineId,
+                        unidade_id: unidadeId || null
+                    })
+                })
+            );
+            
+            Promise.all(promises)
+                .then(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+                    loadNegocios();
+                    alert(`${leadsSelecionados.size} leads importados para o pipeline!`);
+                });
+        }
+        
+        // ==================== UTILS ====================
+        function openChat(leadId) {
+            if (leadId) {
+                window.open(`/?lead=${leadId}`, '_blank');
+            }
+        }
+    </script>
+</body>
+</html>

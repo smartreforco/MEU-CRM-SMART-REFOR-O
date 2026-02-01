@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Reforço - CRM WhatsApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #25D366;
+            --whatsapp-dark: #111B21;
+            --whatsapp-panel: #202C33;
+            --whatsapp-msg-out: #005C4B;
+            --whatsapp-msg-in: #202C33;
+            --whatsapp-border: #2A3942;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--whatsapp-dark);
+            color: #E9EDEF;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Layout Principal */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 70px;
+            background: #0B141A;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            border-right: 1px solid var(--whatsapp-border);
+        }
+        
+        .sidebar-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            color: #8696A0;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-icon:hover, .sidebar-icon.active {
+            background: var(--whatsapp-panel);
+            color: var(--primary-green);
+        }
+        
+        .sidebar-icon i {
+            font-size: 22px;
+        }
+        
+        /* Painel de Contatos/Leads */
+        .contacts-panel {
+            width: 350px;
+            background: var(--whatsapp-dark);
+            border-right: 1px solid var(--whatsapp-border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .contacts-header {
+            padding: 15px;
+            background: var(--whatsapp-panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .contacts-header h5 {
+            margin: 0;
+            color: #E9EDEF;
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            background: var(--whatsapp-dark);
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            background: var(--whatsapp-panel);
+            color: #E9EDEF;
+        }
+        
+        .search-box input::placeholder {
+            color: #8696A0;
+        }
+        
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--whatsapp-border);
+            transition: background 0.2s;
+        }
+        
+        .contact-item:hover, .contact-item.active {
+            background: var(--whatsapp-panel);
+        }
+        
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .contact-name {
+            font-weight: 500;
+            color: #E9EDEF;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .contact-phone {
+            font-size: 13px;
+            color: #8696A0;
+        }
+        
+        .contact-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--whatsapp-msg-out);
+            color: #E9EDEF;
+        }
+        
+        /* Painel Principal */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0B141A;
+        }
+        
+        .main-header {
+            padding: 15px 20px;
+            background: var(--whatsapp-panel);
+            border-bottom: 1px solid var(--whatsapp-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        /* Cards de Estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: var(--whatsapp-panel);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--whatsapp-border);
+        }
+        
+        .stat-card .stat-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #E9EDEF;
+        }
+        
+        .stat-card .stat-label {
+            color: #8696A0;
+            font-size: 14px;
+        }
+        
+        /* Tabela de Leads */
+        .leads-table {
+            background: var(--whatsapp-panel);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--whatsapp-border);
+        }
+        
+        .table {
+            margin-bottom: 0;
+            color: #E9EDEF;
+        }
+        
+        .table thead th {
+            background: #0B141A;
+            border-bottom: 1px solid var(--whatsapp-border);
+            color: #8696A0;
+            font-weight: 500;
+            padding: 15px;
+        }
+        
+        .table tbody td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--whatsapp-border);
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(37, 211, 102, 0.05);
+        }
+        
+        /* Botões */
+        .btn-whatsapp {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-whatsapp:hover {
+            background: #1EBE5A;
+            color: white;
+        }
+        
+        .btn-outline-light {
+            border-color: var(--whatsapp-border);
+            color: #8696A0;
+        }
+        
+        .btn-outline-light:hover {
+            background: var(--whatsapp-panel);
+            border-color: var(--primary-green);
+            color: var(--primary-green);
+        }
+        
+        /* Badge de Status */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-novo { background: #0D6EFD20; color: #0D6EFD; }
+        .status-contato { background: #FFC10720; color: #FFC107; }
+        .status-negociacao { background: #6F42C120; color: #6F42C1; }
+        .status-convertido { background: #25D36620; color: #25D366; }
+        .status-perdido { background: #DC354520; color: #DC3545; }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #8696A0;
+        }
+        
+        .spinner-border {
+            color: var(--primary-green);
+        }
+        
+        /* Paginação */
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--whatsapp-panel);
+            border-top: 1px solid var(--whatsapp-border);
+        }
+        
+        .pagination-info span {
+            color: #8696A0;
+        }
+        
+        /* Modal */
+        .modal-content {
+            background: var(--whatsapp-panel);
+            border: 1px solid var(--whatsapp-border);
+            color: #E9EDEF;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--whatsapp-border);
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--whatsapp-border);
+        }
+        
+        .form-control, .form-select {
+            background: var(--whatsapp-dark);
+            border: 1px solid var(--whatsapp-border);
+            color: #E9EDEF;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: var(--whatsapp-dark);
+            border-color: var(--primary-green);
+            color: #E9EDEF;
+            box-shadow: 0 0 0 0.2rem rgba(37, 211, 102, 0.25);
+        }
+        
+        .form-label {
+            color: #8696A0;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--whatsapp-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--whatsapp-border);
+            border-radius: 3px;
+        }
+        
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        /* Filtros */
+        .filters-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--whatsapp-panel);
+            border: 1px solid var(--whatsapp-border);
+            color: #8696A0;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .filter-chip:hover, .filter-chip.active {
+            border-color: var(--primary-green);
+            color: var(--primary-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-icon active" onclick="showSection('dashboard')" title="Dashboard">
+                <i class="bi bi-grid-1x2-fill"></i>
+            </div>
+            <div class="sidebar-icon" onclick="showSection('leads')" title="Leads">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="sidebar-icon" onclick="showSection('whatsapp')" title="WhatsApp">
+                <i class="bi bi-whatsapp"></i>
+            </div>
+            <div class="sidebar-icon" onclick="showSection('crm')" title="CRM">
+                <i class="bi bi-kanban-fill"></i>
+            </div>
+            <div class="sidebar-icon" onclick="showSection('bot')" title="Bot IA">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="sidebar-icon mt-auto" onclick="showSection('config')" title="Configurações">
+                <i class="bi bi-gear-fill"></i>
+            </div>
+        </div>
+        
+        <!-- Painel de Contatos -->
+        <div class="contacts-panel" id="contactsPanel">
+            <div class="contacts-header">
+                <h5><i class="bi bi-people-fill me-2"></i>Leads</h5>
+                <button class="btn btn-sm btn-whatsapp" onclick="openNewLeadModal()">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchLeads" placeholder="Buscar leads..." oninput="searchLeads()">
+            </div>
+            <div class="contacts-list" id="contactsList">
+                <div class="loading">
+                    <div class="spinner-border" role="status"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Painel Principal -->
+        <div class="main-panel">
+            <div class="main-header">
+                <h4 id="sectionTitle"><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard</h4>
+                <div>
+                    <button class="btn btn-outline-light btn-sm me-2" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise"></i> Atualizar
+                    </button>
+                    <button class="btn btn-whatsapp btn-sm" onclick="openNewLeadModal()">
+                        <i class="bi bi-plus-lg"></i> Novo Lead
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-content" id="mainContent">
+                <!-- Conteúdo dinâmico -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Novo Lead -->
+    <div class="modal fade" id="newLeadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Novo Lead</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newLeadForm">
+                        <div class="mb-3">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" id="leadNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telefone *</label>
+                            <input type="text" class="form-control" id="leadTelefone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="leadEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Origem</label>
+                            <select class="form-select" id="leadOrigem">
+                                <option value="">Selecione...</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Site">Site</option>
+                                <option value="Indicação">Indicação</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Interesse</label>
+                            <input type="text" class="form-control" id="leadInteresse">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="leadObservacoes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-whatsapp" onclick="saveLead()">
+                        <i class="bi bi-check-lg"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const SUPABASE_URL = 'https://dcieravtcvoprktjgvry.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaWVyYXZ0Y3ZvcHJrdGpndnJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NTY5ODMsImV4cCI6MjA4NTIzMjk4M30.vvCrJG8oPcZUcjgfL9vVXFNto5dW1z6hSNvKCa5dgec';
+        
+        // Inicializar Supabase
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Estado da aplicação
+        let allLeads = [];
+        let currentPage = 1;
+        let itemsPerPage = 50;
+        let selectedLead = null;
+        let stats = { total: 0, novos: 0, contato: 0, convertidos: 0 };
+        
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadLeads();
+            showSection('dashboard');
+        });
+        
+        // ==================== CARREGAR LEADS ====================
+        async function loadLeads() {
+            try {
+                const { data, error, count } = await db
+                    .from('leads')
+                    .select('*', { count: 'exact' })
+                    .order('data_criacao', { ascending: false });
+                
+                if (error) throw error;
+                
+                allLeads = data || [];
+                stats.total = allLeads.length;
+                stats.novos = allLeads.filter(l => l.status === 'novo').length;
+                stats.contato = allLeads.filter(l => l.status === 'contato').length;
+                stats.convertidos = allLeads.filter(l => l.status === 'convertido').length;
+                
+                renderContactsList();
+                
+            } catch (error) {
+                console.error('Erro ao carregar leads:', error);
+                showToast('Erro ao carregar leads', 'danger');
+            }
+        }
+        
+        // ==================== RENDERIZAR LISTA DE CONTATOS ====================
+        function renderContactsList() {
+            const container = document.getElementById('contactsList');
+            
+            if (allLeads.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-people fs-1"></i>
+                        <p class="mt-2">Nenhum lead encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const leadsToShow = allLeads.slice(0, 100);
+            
+            container.innerHTML = leadsToShow.map(lead => `
+                <div class="contact-item ${selectedLead?.id === lead.id ? 'active' : ''}" 
+                     onclick="selectLead(${lead.id})">
+                    <div class="contact-avatar">
+                        ${getInitials(lead.nome)}
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">${lead.nome || 'Sem nome'}</div>
+                        <div class="contact-phone">${formatPhone(lead.telefone)}</div>
+                    </div>
+                    <span class="contact-status">${lead.status || 'novo'}</span>
+                </div>
+            `).join('');
+        }
+        
+        // ==================== SEÇÕES ====================
+        function showSection(section) {
+            // Atualizar sidebar
+            document.querySelectorAll('.sidebar-icon').forEach(icon => icon.classList.remove('active'));
+            event?.target?.closest('.sidebar-icon')?.classList.add('active');
+            
+            const content = document.getElementById('mainContent');
+            const title = document.getElementById('sectionTitle');
+            
+            switch(section) {
+                case 'dashboard':
+                    title.innerHTML = '<i class="bi bi-grid-1x2-fill me-2"></i>Dashboard';
+                    content.innerHTML = renderDashboard();
+                    break;
+                    
+                case 'leads':
+                    title.innerHTML = '<i class="bi bi-people-fill me-2"></i>Todos os Leads';
+                    content.innerHTML = renderLeadsTable();
+                    break;
+                    
+                case 'whatsapp':
+                    title.innerHTML = '<i class="bi bi-whatsapp me-2"></i>WhatsApp';
+                    content.innerHTML = renderWhatsApp();
+                    break;
+                    
+                case 'crm':
+                    title.innerHTML = '<i class="bi bi-kanban-fill me-2"></i>CRM Pipeline';
+                    content.innerHTML = renderCRM();
+                    break;
+                    
+                case 'bot':
+                    title.innerHTML = '<i class="bi bi-robot me-2"></i>Bot IA';
+                    content.innerHTML = renderBot();
+                    break;
+                    
+                case 'config':
+                    title.innerHTML = '<i class="bi bi-gear-fill me-2"></i>Configurações';
+                    content.innerHTML = renderConfig();
+                    break;
+            }
+        }
+        
+        // ==================== RENDERIZAR DASHBOARD ====================
+        function renderDashboard() {
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #25D36620; color: #25D366;">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="stat-value">${stats.total}</div>
+                        <div class="stat-label">Total de Leads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #0D6EFD20; color: #0D6EFD;">
+                            <i class="bi bi-person-plus-fill"></i>
+                        </div>
+                        <div class="stat-value">${stats.novos}</div>
+                        <div class="stat-label">Leads Novos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #FFC10720; color: #FFC107;">
+                            <i class="bi bi-chat-dots-fill"></i>
+                        </div>
+                        <div class="stat-value">${stats.contato}</div>
+                        <div class="stat-label">Em Contato</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #6F42C120; color: #6F42C1;">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="stat-value">${stats.convertidos}</div>
+                        <div class="stat-label">Convertidos</div>
+                    </div>
+                </div>
+                
+                <div class="leads-table">
+                    <div class="p-3 border-bottom" style="border-color: var(--whatsapp-border) !important;">
+                        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Leads Recentes</h6>
+                    </div>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Origem</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allLeads.slice(0, 10).map(lead => `
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="contact-avatar me-2" style="width:35px;height:35px;font-size:12px;">
+                                                ${getInitials(lead.nome)}
+                                            </div>
+                                            ${lead.nome || 'Sem nome'}
+                                        </div>
+                                    </td>
+                                    <td>${formatPhone(lead.telefone)}</td>
+                                    <td>${lead.origem || '-'}</td>
+                                    <td><span class="status-badge status-${lead.status || 'novo'}">${lead.status || 'novo'}</span></td>
+                                    <td>${formatDate(lead.data_criacao)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-whatsapp" onclick="openWhatsApp('${lead.telefone}')" title="WhatsApp">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // ==================== RENDERIZAR TABELA DE LEADS ====================
+        function renderLeadsTable() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const leadsPage = allLeads.slice(start, end);
+            const totalPages = Math.ceil(allLeads.length / itemsPerPage);
+            
+            return `
+                <div class="filters-bar">
+                    <span class="filter-chip active" onclick="filterLeads('todos')">Todos (${stats.total})</span>
+                    <span class="filter-chip" onclick="filterLeads('novo')">Novos (${stats.novos})</span>
+                    <span class="filter-chip" onclick="filterLeads('contato')">Em Contato (${stats.contato})</span>
+                    <span class="filter-chip" onclick="filterLeads('convertido')">Convertidos (${stats.convertidos})</span>
+                </div>
+                
+                <div class="leads-table">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="form-check-input"></th>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Origem</th>
+                                <th>Interesse</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${leadsPage.map(lead => `
+                                <tr>
+                                    <td><input type="checkbox" class="form-check-input" value="${lead.id}"></td>
+                                    <td>${lead.nome || 'Sem nome'}</td>
+                                    <td>${formatPhone(lead.telefone)}</td>
+                                    <td>${lead.email || '-'}</td>
+                                    <td>${lead.origem || '-'}</td>
+                                    <td>${lead.interesse || '-'}</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" style="width:auto;" 
+                                                onchange="updateLeadStatus(${lead.id}, this.value)">
+                                            <option value="novo" ${lead.status === 'novo' ? 'selected' : ''}>Novo</option>
+                                            <option value="contato" ${lead.status === 'contato' ? 'selected' : ''}>Contato</option>
+                                            <option value="negociacao" ${lead.status === 'negociacao' ? 'selected' : ''}>Negociação</option>
+                                            <option value="convertido" ${lead.status === 'convertido' ? 'selected' : ''}>Convertido</option>
+                                            <option value="perdido" ${lead.status === 'perdido' ? 'selected' : ''}>Perdido</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-light" onclick="editLead(${lead.id})" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-whatsapp" onclick="openWhatsApp('${lead.telefone}')" title="WhatsApp">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteLead(${lead.id})" title="Excluir">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="pagination-info">
+                        <span>Mostrando ${start + 1}-${Math.min(end, allLeads.length)} de ${allLeads.length}</span>
+                        <div>
+                            <button class="btn btn-sm btn-outline-light" ${currentPage === 1 ? 'disabled' : ''} 
+                                    onclick="changePage(${currentPage - 1})">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <span class="mx-2">Página ${currentPage} de ${totalPages}</span>
+                            <button class="btn btn-sm btn-outline-light" ${currentPage === totalPages ? 'disabled' : ''} 
+                                    onclick="changePage(${currentPage + 1})">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ==================== OUTRAS SEÇÕES ====================
+        function renderWhatsApp() {
+            return `
+                <div class="text-center p-5">
+                    <i class="bi bi-whatsapp" style="font-size: 80px; color: var(--primary-green);"></i>
+                    <h4 class="mt-3">WhatsApp Business</h4>
+                    <p class="text-muted">Configure sua integração com WhatsApp Business API</p>
+                    <button class="btn btn-whatsapp" onclick="showSection('config')">
+                        <i class="bi bi-gear me-2"></i>Configurar
+                    </button>
+                </div>
+            `;
+        }
+        
+        function renderCRM() {
+            return `
+                <div class="text-center p-5">
+                    <i class="bi bi-kanban" style="font-size: 80px; color: #6F42C1;"></i>
+                    <h4 class="mt-3">Pipeline CRM</h4>
+                    <p class="text-muted">Gerencie seus negócios com Kanban visual</p>
+                    <p class="text-success"><i class="bi bi-check-circle me-2"></i>Pipeline configurado no Supabase</p>
+                </div>
+            `;
+        }
+        
+        function renderBot() {
+            return `
+                <div class="text-center p-5">
+                    <i class="bi bi-robot" style="font-size: 80px; color: #0D6EFD;"></i>
+                    <h4 class="mt-3">Bot IA - Gemini</h4>
+                    <p class="text-muted">Responda automaticamente com inteligência artificial</p>
+                    <p class="text-success"><i class="bi bi-check-circle me-2"></i>Configurado com Gemini 2.5-flash</p>
+                </div>
+            `;
+        }
+        
+        function renderConfig() {
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h5><i class="bi bi-database me-2"></i>Supabase</h5>
+                            <p class="text-success"><i class="bi bi-check-circle me-2"></i>Conectado</p>
+                            <small class="text-muted">URL: ${SUPABASE_URL}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h5><i class="bi bi-cloud me-2"></i>Status</h5>
+                            <p class="text-success"><i class="bi bi-check-circle me-2"></i>Sistema Online</p>
+                            <small class="text-muted">${allLeads.length} leads carregados</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ==================== FUNÇÕES AUXILIARES ====================
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        }
+        
+        function formatPhone(phone) {
+            if (!phone) return '-';
+            return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        }
+        
+        function formatDate(date) {
+            if (!date) return '-';
+            return new Date(date).toLocaleDateString('pt-BR');
+        }
+        
+        function selectLead(id) {
+            selectedLead = allLeads.find(l => l.id === id);
+            renderContactsList();
+        }
+        
+        function searchLeads() {
+            const term = document.getElementById('searchLeads').value.toLowerCase();
+            const filtered = allLeads.filter(l => 
+                (l.nome && l.nome.toLowerCase().includes(term)) ||
+                (l.telefone && l.telefone.includes(term)) ||
+                (l.email && l.email.toLowerCase().includes(term))
+            );
+            renderFilteredContacts(filtered);
+        }
+        
+        function renderFilteredContacts(leads) {
+            const container = document.getElementById('contactsList');
+            container.innerHTML = leads.slice(0, 50).map(lead => `
+                <div class="contact-item" onclick="selectLead(${lead.id})">
+                    <div class="contact-avatar">${getInitials(lead.nome)}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${lead.nome || 'Sem nome'}</div>
+                        <div class="contact-phone">${formatPhone(lead.telefone)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function changePage(page) {
+            currentPage = page;
+            showSection('leads');
+        }
+        
+        function openWhatsApp(phone) {
+            if (!phone) return;
+            const cleanPhone = phone.replace(/\D/g, '');
+            window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+        }
+        
+        async function refreshData() {
+            showToast('Atualizando...', 'info');
+            await loadLeads();
+            showSection('dashboard');
+            showToast('Dados atualizados!', 'success');
+        }
+        
+        // ==================== CRUD LEADS ====================
+        function openNewLeadModal() {
+            document.getElementById('newLeadForm').reset();
+            new bootstrap.Modal(document.getElementById('newLeadModal')).show();
+        }
+        
+        async function saveLead() {
+            const lead = {
+                nome: document.getElementById('leadNome').value,
+                telefone: document.getElementById('leadTelefone').value,
+                email: document.getElementById('leadEmail').value || null,
+                origem: document.getElementById('leadOrigem').value || null,
+                interesse: document.getElementById('leadInteresse').value || null,
+                observacoes: document.getElementById('leadObservacoes').value || null,
+                status: 'novo'
+            };
+            
+            try {
+                const { error } = await db.from('leads').insert(lead);
+                if (error) throw error;
+                
+                showToast('Lead salvo com sucesso!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('newLeadModal')).hide();
+                await loadLeads();
+                showSection('leads');
+                
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                showToast('Erro ao salvar lead', 'danger');
+            }
+        }
+        
+        async function updateLeadStatus(id, status) {
+            try {
+                const { error } = await db.from('leads').update({ status }).eq('id', id);
+                if (error) throw error;
+                
+                const lead = allLeads.find(l => l.id === id);
+                if (lead) lead.status = status;
+                
+                showToast('Status atualizado!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao atualizar:', error);
+                showToast('Erro ao atualizar', 'danger');
+            }
+        }
+        
+        async function deleteLead(id) {
+            if (!confirm('Tem certeza que deseja excluir este lead?')) return;
+            
+            try {
+                const { error } = await db.from('leads').delete().eq('id', id);
+                if (error) throw error;
+                
+                showToast('Lead excluído!', 'success');
+                await loadLeads();
+                showSection('leads');
+                
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                showToast('Erro ao excluir', 'danger');
+            }
+        }
+        
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const container = document.querySelector('.toast-container');
+            const id = 'toast-' + Date.now();
+            
+            const colors = {
+                success: 'bg-success',
+                danger: 'bg-danger',
+                warning: 'bg-warning',
+                info: 'bg-primary'
+            };
+            
+            container.innerHTML += `
+                <div id="${id}" class="toast ${colors[type]} text-white" role="alert">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'x-circle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            const toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
+            toast.show();
+            
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
+    </script>
+</body>
+</html>

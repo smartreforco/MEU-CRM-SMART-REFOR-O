@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Leads - Smart Reforço</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+        }
+        
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: 250px;
+            padding: 20px;
+        }
+        
+        .sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card .icon.primary { background: rgba(79, 70, 229, 0.1); color: var(--primary-color); }
+        .stat-card .icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .stat-card .icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+        .stat-card .icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+        .stat-card .icon.info { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+        
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .stat-card .label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px;
+            font-weight: 600;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #374151;
+            padding: 15px;
+        }
+        
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        
+        .badge-novo { background: #dbeafe; color: #1d4ed8; }
+        .badge-em_contato { background: #fef3c7; color: #d97706; }
+        .badge-em_trial { background: #e0e7ff; color: #4f46e5; }
+        .badge-ativo { background: #d1fae5; color: #059669; }
+        .badge-convertido { background: #bbf7d0; color: #166534; }
+        .badge-perdido { background: #fee2e2; color: #dc2626; }
+        
+        .dropdown-menu-status {
+            min-width: 160px;
+            padding: 8px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .dropdown-menu-status .dropdown-item {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-menu-status .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .badge-status.dropdown-toggle::after {
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .search-box input {
+            border: none;
+            padding: 12px 15px;
+        }
+        
+        .search-box input:focus {
+            box-shadow: none;
+        }
+        
+        .filter-select {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 15px;
+        }
+        
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 25px;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .lead-detail-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .lead-detail-value {
+            font-size: 1rem;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        
+        .anotacao-item {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .anotacao-item .date {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .historico-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .historico-item:last-child {
+            border-bottom: none;
+        }
+        
+        .pagination .page-link {
+            border: none;
+            border-radius: 8px;
+            margin: 0 3px;
+            color: #374151;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .whatsapp-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+        }
+        
+        .whatsapp-btn:hover {
+            background: #128c7e;
+            color: white;
+        }
+        
+        /* Toast notifications */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .toast-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-people-fill"></i> Smart Leads
+        </div>
+        <nav>
+            <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('leads')">
+                <i class="bi bi-person-lines-fill"></i> Leads
+            </a>
+            <a href="/" class="nav-link" target="_blank">
+                <i class="bi bi-whatsapp"></i> WhatsApp Chat
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('atualizar')">
+                <i class="bi bi-arrow-repeat"></i> Atualizar em Massa
+            </a>
+            <a href="#" class="nav-link" onclick="showSection('importar')">
+                <i class="bi bi-cloud-upload-fill"></i> Importar Dados
+            </a>
+            <a href="#" class="nav-link" onclick="exportarLeads()">
+                <i class="bi bi-download"></i> Exportar
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section">
+            <h2 class="mb-4">Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-total">0</div>
+                                <div class="label">Total</div>
+                            </div>
+                            <div class="icon primary">
+                                <i class="bi bi-people"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-novo">0</div>
+                                <div class="label">Novos</div>
+                            </div>
+                            <div class="icon info">
+                                <i class="bi bi-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-em_contato">0</div>
+                                <div class="label">Em Contato</div>
+                            </div>
+                            <div class="icon warning">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-em_trial">0</div>
+                                <div class="label">Em Trial</div>
+                            </div>
+                            <div class="icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-ativo">0</div>
+                                <div class="label">Ativos</div>
+                            </div>
+                            <div class="icon success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-convertido">0</div>
+                                <div class="label">Convertidos</div>
+                            </div>
+                            <div class="icon" style="background: rgba(22, 101, 52, 0.1); color: #166534;">
+                                <i class="bi bi-trophy"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-geo-alt me-2"></i>Leads por Cidade (Top 10)
+                        </div>
+                        <div class="card-body">
+                            <div id="cidade-chart"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-pie-chart me-2"></i>Status dos Leads
+                        </div>
+                        <div class="card-body text-center" id="status-summary">
+                            <!-- Status summary will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads Section -->
+        <div id="leads-section" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gerenciar Leads</h2>
+                <span class="text-muted" id="total-leads-text">0 leads encontrados</span>
+            </div>
+            
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="search-box">
+                        <input type="text" class="form-control" id="search-input" 
+                               placeholder="Buscar por nome, telefone ou endereço..." 
+                               onkeyup="debounceSearch()">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select filter-select" id="filter-cidade" onchange="loadLeads()">
+                        <option value="">Todas as Cidades</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select filter-select" id="filter-status" onchange="loadLeads()">
+                        <option value="">Todos os Status</option>
+                        <option value="novo">Novo</option>
+                        <option value="em_contato">Em Contato</option>
+                        <option value="em_trial">Em Trial</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="convertido">Convertido</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                        <i class="bi bi-x-circle me-1"></i> Limpar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Leads Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="loading" id="loading-leads">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Carregando leads...</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Cidade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leads-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <nav id="pagination-container">
+                        <ul class="pagination justify-content-center mb-0">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atualizar em Massa Section -->
+        <div id="atualizar-section" style="display: none;">
+            <h2 class="mb-4">
+                <i class="bi bi-arrow-repeat me-2"></i>Atualizar Status em Massa
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Upload de Planilha</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Como funciona:</strong> Suba uma planilha (CSV ou Excel) com os números de telefone. 
+                                O sistema vai encontrar automaticamente os contatos correspondentes e atualizar o status de todos de uma vez.
+                                <br><small class="text-muted">O sistema ignora formatação: (11) 99999-9999 = 11999999999 = 5511999999999</small>
+                            </div>
+                            
+                            <!-- Step 1: Upload -->
+                            <div id="step-upload">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">1. Selecione o arquivo</label>
+                                    <input type="file" class="form-control form-control-lg" id="arquivo-atualizacao" 
+                                           accept=".csv,.xlsx,.xls" onchange="previewArquivo()">
+                                    <small class="text-muted">Formatos aceitos: CSV, Excel (.xlsx, .xls)</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Configurar -->
+                            <div id="step-config" style="display: none;">
+                                <hr>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">2. Selecione a coluna com os telefones</label>
+                                    <select class="form-select form-select-lg" id="coluna-telefone">
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">3. Preview dos dados</label>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm" id="preview-table">
+                                            <thead id="preview-thead"></thead>
+                                            <tbody id="preview-tbody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">4. Escolha o novo status</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <select class="form-select form-select-lg" id="novo-status-massa">
+                                                <option value="em_contato">📱 Em Contato (mensagem enviada)</option>
+                                                <option value="convertido">✅ Convertido (cliente fechou)</option>
+                                                <option value="perdido">❌ Perdido (não interessado)</option>
+                                                <option value="novo">🆕 Novo (resetar status)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-secondary" onclick="resetarUpload()">
+                                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                                    </button>
+                                    <button class="btn btn-primary btn-lg" onclick="executarAtualizacao()" id="btn-atualizar-massa">
+                                        <i class="bi bi-check2-all me-2"></i>Atualizar Contatos
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Resultado -->
+                            <div id="step-resultado" style="display: none;">
+                                <hr>
+                                <div class="alert alert-success" id="resultado-sucesso">
+                                    <h5><i class="bi bi-check-circle me-2"></i>Atualização Concluída!</h5>
+                                    <p class="mb-0" id="resultado-mensagem"></p>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <i class="bi bi-check2 me-2"></i>Contatos Atualizados
+                                            </div>
+                                            <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                                <ul class="list-unstyled mb-0" id="lista-atualizados"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-warning">
+                                            <div class="card-header bg-warning">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>Não Encontrados
+                                            </div>
+                                            <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                                <ul class="list-unstyled mb-0" id="lista-nao-encontrados"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-primary mt-3" onclick="resetarUpload()">
+                                    <i class="bi bi-plus-circle me-2"></i>Nova Atualização
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-question-circle me-2"></i>Ajuda</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Formato da planilha:</h6>
+                            <p class="text-muted small">
+                                A planilha deve ter uma coluna com os números de telefone dos contatos que você quer atualizar.
+                            </p>
+                            
+                            <h6>Exemplo de uso:</h6>
+                            <ol class="text-muted small">
+                                <li>Você dispara mensagens para 500 contatos</li>
+                                <li>Exporta a lista do seu disparador</li>
+                                <li>Sobe essa lista aqui</li>
+                                <li>Escolhe status "Em Contato"</li>
+                                <li>Todos os 500 são atualizados!</li>
+                            </ol>
+                            
+                            <h6>Formatos de telefone aceitos:</h6>
+                            <ul class="text-muted small">
+                                <li>(11) 99999-9999</li>
+                                <li>11 99999-9999</li>
+                                <li>11999999999</li>
+                                <li>5511999999999</li>
+                                <li>+55 11 99999-9999</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WhatsApp Section -->
+        <div id="whatsapp-section" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-whatsapp text-success me-2"></i>WhatsApp Marketing</h2>
+                <div>
+                    <span class="badge bg-success me-2" id="whatsapp-status-badge">
+                        <i class="bi bi-circle-fill me-1"></i> Verificando...
+                    </span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="verificarConexaoWhatsapp()">
+                        <i class="bi bi-arrow-clockwise"></i> Atualizar Status
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats WhatsApp -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-wpp-total">0</div>
+                                <div class="label">Total Enviadas</div>
+                            </div>
+                            <div class="icon success">
+                                <i class="bi bi-send-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-wpp-sucesso">0</div>
+                                <div class="label">Sucesso</div>
+                            </div>
+                            <div class="icon primary">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-wpp-falha">0</div>
+                                <div class="label">Falhas</div>
+                            </div>
+                            <div class="icon danger">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="number" id="stat-wpp-hoje">0</div>
+                                <div class="label">Hoje</div>
+                            </div>
+                            <div class="icon warning">
+                                <i class="bi bi-calendar-day"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Enviar Mensagem -->
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-send me-2"></i>Enviar Mensagens</h5>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm active" onclick="setModoEnvio('individual')" id="btn-modo-individual">
+                                    Individual
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="setModoEnvio('massa')" id="btn-modo-massa">
+                                    Em Massa
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Modo Individual -->
+                            <div id="modo-individual">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Telefone</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                            <input type="text" class="form-control" id="wpp-telefone" placeholder="11999999999">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nome (opcional)</label>
+                                        <input type="text" class="form-control" id="wpp-nome" placeholder="Nome do contato">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Modo Massa -->
+                            <div id="modo-massa" style="display: none;">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Filtrar por Cidade</label>
+                                        <select class="form-select" id="wpp-filter-cidade">
+                                            <option value="">Todas</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Filtrar por Status</label>
+                                        <select class="form-select" id="wpp-filter-status">
+                                            <option value="">Todos</option>
+                                            <option value="novo">Novo</option>
+                                            <option value="em_contato">Em Contato</option>
+                                            <option value="em_trial">Em Trial</option>
+                                            <option value="ativo">Ativo</option>
+                                            <option value="convertido">Convertido</option>
+                                            <option value="perdido">Perdido</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Limite</label>
+                                        <input type="number" class="form-control" id="wpp-limite" value="50" min="1" max="500">
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary mb-3" onclick="carregarLeadsParaEnvio()">
+                                    <i class="bi bi-search me-1"></i> Buscar Leads
+                                </button>
+                                <div id="leads-selecionados-container" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <strong id="qtd-leads-selecionados">0</strong> leads encontrados para envio
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="selecionar-todos-leads" checked>
+                                            <label class="form-check-label" for="selecionar-todos-leads">
+                                                Selecionar todos
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Intervalo mínimo (segundos)</label>
+                                            <input type="number" class="form-control" id="wpp-intervalo-min" value="30" min="10" max="120">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Intervalo máximo (segundos)</label>
+                                            <input type="number" class="form-control" id="wpp-intervalo-max" value="60" min="30" max="180">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Template de Mensagem -->
+                            <div class="mb-3">
+                                <label class="form-label">Template de Mensagem</label>
+                                <select class="form-select" id="wpp-template" onchange="selecionarTemplate()">
+                                    <option value="">Selecione um template...</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Tipo de Envio -->
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Conteúdo</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="tipoConteudo" id="tipo-texto" value="texto" checked onchange="alterarTipoConteudo()">
+                                    <label class="btn btn-outline-primary" for="tipo-texto">
+                                        <i class="bi bi-chat-text me-1"></i> Texto
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="tipoConteudo" id="tipo-imagem" value="imagem" onchange="alterarTipoConteudo()">
+                                    <label class="btn btn-outline-primary" for="tipo-imagem">
+                                        <i class="bi bi-image me-1"></i> Imagem
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="tipoConteudo" id="tipo-video" value="video" onchange="alterarTipoConteudo()">
+                                    <label class="btn btn-outline-primary" for="tipo-video">
+                                        <i class="bi bi-camera-video me-1"></i> Vídeo
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Campo URL da Mídia (imagem/vídeo) -->
+                            <div class="mb-3" id="campo-midia" style="display: none;">
+                                <label class="form-label" id="label-midia">URL da Imagem</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                    <input type="url" class="form-control" id="wpp-url-midia" 
+                                           placeholder="https://exemplo.com/imagem.jpg">
+                                </div>
+                                <small class="text-muted">Cole a URL direta da imagem ou vídeo (deve ser acessível publicamente)</small>
+                                
+                                <!-- Preview da mídia -->
+                                <div id="preview-midia" class="mt-2" style="display: none;">
+                                    <img id="preview-imagem" src="" alt="Preview" class="img-fluid rounded" style="max-height: 150px; display: none;">
+                                    <video id="preview-video" src="" class="img-fluid rounded" style="max-height: 150px; display: none;" controls></video>
+                                </div>
+                            </div>
+                            
+                            <!-- Mensagem / Legenda -->
+                            <div class="mb-3">
+                                <label class="form-label" id="label-mensagem">Mensagem</label>
+                                <textarea class="form-control" id="wpp-mensagem" rows="6" 
+                                    placeholder="Digite sua mensagem...&#10;&#10;Use variáveis: {nome}, {cidade}, {tipo_servico}"></textarea>
+                                <small class="text-muted">
+                                    Variáveis disponíveis: <code>{nome}</code>, <code>{cidade}</code>, <code>{tipo_servico}</code>, <code>{endereco}</code>
+                                </small>
+                            </div>
+                            
+                            <!-- Preview -->
+                            <div class="mb-3">
+                                <label class="form-label">Preview</label>
+                                <div class="card bg-light">
+                                    <div class="card-body" style="white-space: pre-wrap; font-size: 0.9rem;" id="wpp-preview">
+                                        <span class="text-muted">A mensagem aparecerá aqui...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Botão Enviar -->
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success btn-lg" id="btn-enviar-wpp" onclick="enviarWhatsApp()">
+                                    <i class="bi bi-send me-2"></i> Enviar Mensagem
+                                </button>
+                            </div>
+                            
+                            <!-- Progress Bar (para envio em massa) -->
+                            <div id="envio-progress-container" style="display: none;" class="mt-4">
+                                <div class="alert alert-info">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Enviando mensagens...</span>
+                                        <span id="envio-progress-text">0/0</span>
+                                    </div>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                             role="progressbar" id="envio-progress-bar" style="width: 0%">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 d-flex justify-content-between">
+                                        <small>
+                                            ✅ <span id="envio-sucesso">0</span> sucesso | 
+                                            ❌ <span id="envio-falha">0</span> falhas
+                                        </small>
+                                        <button class="btn btn-danger btn-sm" onclick="cancelarEnvio()">
+                                            <i class="bi bi-x-circle"></i> Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Histórico -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Histórico de Envios</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Data/Hora</th>
+                                            <th>Contato</th>
+                                            <th>Telefone</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wpp-history-tbody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                Nenhuma mensagem enviada ainda
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configurações -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Configurações Z-API</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Instance ID</label>
+                                <input type="text" class="form-control" id="zapi-instance" placeholder="Seu Instance ID">
+                                <small class="text-muted">ID da instância no painel Z-API</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Token da Instância</label>
+                                <input type="text" class="form-control" id="zapi-token" placeholder="Token da instância">
+                                <small class="text-muted">Token específico da instância</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Client-Token (Segurança)</label>
+                                <input type="text" class="form-control" id="zapi-client-token" placeholder="Token de segurança da conta">
+                                <small class="text-muted">
+                                    <a href="https://developer.z-api.io/security/client-token" target="_blank">
+                                        Como obter o Client-Token? <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nome da Instância</label>
+                                <input type="text" class="form-control" id="zapi-nome" placeholder="Nome para identificação">
+                            </div>
+                            <button class="btn btn-primary w-100" onclick="salvarConfigZAPI()">
+                                <i class="bi bi-save me-2"></i>Salvar Configurações
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Dicas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning mb-3">
+                                <strong>⚠️ Evite bloqueios:</strong>
+                                <ul class="mb-0 small">
+                                    <li>Use intervalos de 30-60 segundos</li>
+                                    <li>Máximo 100 mensagens/dia no início</li>
+                                    <li>Varie o texto das mensagens</li>
+                                    <li>Evite links suspeitos</li>
+                                </ul>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <strong>💡 Variáveis:</strong>
+                                <ul class="mb-0 small">
+                                    <li><code>{nome}</code> - Nome do lead</li>
+                                    <li><code>{cidade}</code> - Cidade</li>
+                                    <li><code>{tipo_servico}</code> - Tipo de serviço</li>
+                                    <li><code>{endereco}</code> - Endereço</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Importar Section -->
+        <div id="importar-section" style="display: none;">
+            <h2 class="mb-4">Importar Dados</h2>
+            
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-cloud-upload display-1 text-primary mb-3"></i>
+                    <h4>Importar Dados dos Arquivos Excel</h4>
+                    <p class="text-muted mb-4">
+                        Clique no botão abaixo para importar todos os contatos dos arquivos Excel<br>
+                        da pasta "CONTATOS SMART REFORÇO".
+                    </p>
+                    <button class="btn btn-primary btn-lg px-5" onclick="importarDados()" id="btn-importar">
+                        <i class="bi bi-cloud-upload me-2"></i> Importar Dados
+                    </button>
+                    <div class="mt-4" id="import-result" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span id="import-message"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Detail Modal -->
+    <div class="modal fade" id="leadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span id="modal-lead-nome">Detalhes do Lead</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="lead-detail-label">Telefone</div>
+                            <div class="lead-detail-value">
+                                <span id="modal-lead-telefone"></span>
+                                <a href="#" id="modal-whatsapp-link" class="btn btn-sm whatsapp-btn ms-2" target="_blank">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="lead-detail-label">Cidade</div>
+                            <div class="lead-detail-value" id="modal-lead-cidade"></div>
+                            
+                            <div class="lead-detail-label">Endereço</div>
+                            <div class="lead-detail-value" id="modal-lead-endereco"></div>
+                            
+                            <div class="lead-detail-label">Tipo de Serviço</div>
+                            <div class="lead-detail-value" id="modal-lead-tipo"></div>
+                            
+                            <div class="lead-detail-label">Avaliação</div>
+                            <div class="lead-detail-value" id="modal-lead-avaliacao"></div>
+                            
+                            <div class="lead-detail-label">Link Google Maps</div>
+                            <div class="lead-detail-value">
+                                <a href="#" id="modal-lead-maps" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-geo-alt me-1"></i> Abrir no Maps
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="lead-detail-label">Status</div>
+                            <div class="mb-3">
+                                <select class="form-select" id="modal-lead-status" onchange="updateLeadStatus()">
+                                    <option value="novo">🔵 Novo</option>
+                                    <option value="em_contato">🟡 Em Contato</option>
+                                    <option value="em_trial">🟣 Em Trial</option>
+                                    <option value="ativo">🟢 Ativo</option>
+                                    <option value="convertido">✅ Convertido</option>
+                                    <option value="perdido">🔴 Perdido</option>
+                                </select>
+                            </div>
+                            
+                            <div class="lead-detail-label">Adicionar Anotação</div>
+                            <div class="mb-3">
+                                <textarea class="form-control" id="nova-anotacao" rows="3" 
+                                          placeholder="Digite uma anotação..."></textarea>
+                                <button class="btn btn-primary btn-sm mt-2" onclick="addAnotacao()">
+                                    <i class="bi bi-plus me-1"></i> Adicionar
+                                </button>
+                            </div>
+                            
+                            <div class="lead-detail-label">Anotações</div>
+                            <div id="modal-anotacoes" style="max-height: 200px; overflow-y: auto;">
+                                <!-- Anotações serão carregadas aqui -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="lead-detail-label">Histórico</div>
+                    <div id="modal-historico" style="max-height: 150px; overflow-y: auto;">
+                        <!-- Histórico será carregado aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentLeadId = null;
+        let searchTimeout = null;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCidades();
+        });
+        
+        function showSection(section) {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            event.target.closest('.nav-link').classList.add('active');
+            
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('leads-section').style.display = 'none';
+            document.getElementById('importar-section').style.display = 'none';
+            document.getElementById('atualizar-section').style.display = 'none';
+            document.getElementById('whatsapp-section').style.display = 'none';
+            
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            if (section === 'dashboard') {
+                loadStats();
+            } else if (section === 'leads') {
+                loadLeads();
+            } else if (section === 'atualizar') {
+                resetarUpload();
+            } else if (section === 'whatsapp') {
+                initWhatsApp();
+            }
+        }
+        
+        function loadStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('stat-total').textContent = data.total.toLocaleString();
+                    document.getElementById('stat-novo').textContent = data.novo.toLocaleString();
+                    document.getElementById('stat-em_contato').textContent = data.em_contato.toLocaleString();
+                    document.getElementById('stat-em_trial').textContent = (data.em_trial || 0).toLocaleString();
+                    document.getElementById('stat-ativo').textContent = (data.ativo || 0).toLocaleString();
+                    document.getElementById('stat-convertido').textContent = data.convertido.toLocaleString();
+                    
+                    // Status summary
+                    let statusHtml = `
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>🔵 Novos</span>
+                                <span>${data.novo}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" style="background: #3b82f6; width: ${data.total ? (data.novo/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>🟡 Em Contato</span>
+                                <span>${data.em_contato}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: ${data.total ? (data.em_contato/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>🟣 Em Trial</span>
+                                <span>${data.em_trial || 0}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" style="background: #6366f1; width: ${data.total ? ((data.em_trial||0)/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>🟢 Ativos</span>
+                                <span>${data.ativo || 0}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: ${data.total ? ((data.ativo||0)/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>✅ Convertidos</span>
+                                <span>${data.convertido}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" style="background: #166534; width: ${data.total ? (data.convertido/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>🔴 Perdidos</span>
+                                <span>${data.perdido}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-danger" style="width: ${data.total ? (data.perdido/data.total*100) : 0}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('status-summary').innerHTML = statusHtml;
+                    
+                    // Cidade chart (simples, usando barras)
+                    let cidadeHtml = '<div class="list-group list-group-flush">';
+                    data.por_cidade.forEach((item, index) => {
+                        const percent = data.total ? (item.count / data.total * 100).toFixed(1) : 0;
+                        cidadeHtml += `
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div style="flex: 1;">
+                                    <strong>${item.cidade}</strong>
+                                    <div class="progress mt-1" style="height: 6px;">
+                                        <div class="progress-bar" style="width: ${percent}%; background: var(--primary-color);"></div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-primary rounded-pill ms-3">${item.count}</span>
+                            </div>
+                        `;
+                    });
+                    cidadeHtml += '</div>';
+                    document.getElementById('cidade-chart').innerHTML = cidadeHtml;
+                });
+        }
+        
+        function loadCidades() {
+            fetch('/api/cidades')
+                .then(response => response.json())
+                .then(cidades => {
+                    const select = document.getElementById('filter-cidade');
+                    cidades.forEach(cidade => {
+                        const option = document.createElement('option');
+                        option.value = cidade;
+                        option.textContent = cidade;
+                        select.appendChild(option);
+                    });
+                });
+        }
+        
+        function loadLeads() {
+            const search = document.getElementById('search-input').value;
+            const cidade = document.getElementById('filter-cidade').value;
+            const status = document.getElementById('filter-status').value;
+            
+            document.getElementById('loading-leads').classList.add('show');
+            
+            let url = `/api/leads?page=${currentPage}&search=${encodeURIComponent(search)}&cidade=${encodeURIComponent(cidade)}&status=${encodeURIComponent(status)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading-leads').classList.remove('show');
+                    document.getElementById('total-leads-text').textContent = `${data.total.toLocaleString()} leads encontrados`;
+                    
+                    const tbody = document.getElementById('leads-tbody');
+                    tbody.innerHTML = '';
+                    
+                    data.leads.forEach(lead => {
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.onclick = () => openLeadModal(lead.id);
+                        
+                        const statusClass = `badge-${lead.status}`;
+                        const statusLabels = {
+                            'novo': 'Novo',
+                            'em_contato': 'Em Contato',
+                            'em_trial': 'Em Trial',
+                            'ativo': 'Ativo',
+                            'convertido': 'Convertido',
+                            'perdido': 'Perdido'
+                        };
+                        
+                        const statusIcons = {
+                            'novo': '🔵',
+                            'em_contato': '🟡',
+                            'em_trial': '🟣',
+                            'ativo': '🟢',
+                            'convertido': '✅',
+                            'perdido': '🔴'
+                        };
+                        
+                        tr.innerHTML = `
+                            <td>
+                                <strong>${lead.nome || 'Sem nome'}</strong>
+                                <br><small class="text-muted">${lead.tipo_servico || ''}</small>
+                            </td>
+                            <td>
+                                ${lead.telefone}
+                                <button class="btn btn-sm whatsapp-btn ms-1" onclick="event.stopPropagation(); iniciarChatWhatsApp(${lead.id})" title="Abrir Chat">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                            </td>
+                            <td>${lead.cidade}</td>
+                            <td>
+                                <div class="dropdown" onclick="event.stopPropagation();">
+                                    <button class="badge-status ${statusClass} dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown" aria-expanded="false" style="border: none; cursor: pointer;">
+                                        ${statusIcons[lead.status] || ''} ${statusLabels[lead.status] || lead.status}
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-status">
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'novo')">🔵 Novo</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'em_contato')">🟡 Em Contato</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'em_trial')">🟣 Em Trial</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'ativo')">🟢 Ativo</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'convertido')">✅ Convertido</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alterarStatusRapido(${lead.id}, 'perdido')">🔴 Perdido</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn-action btn-light" onclick="event.stopPropagation(); openLeadModal(${lead.id})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    
+                    // Paginação
+                    renderPagination(data.total_pages, data.page);
+                });
+        }
+        
+        function renderPagination(totalPages, currentPage) {
+            const container = document.querySelector('#pagination-container ul');
+            container.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Anterior
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1})"><i class="bi bi-chevron-left"></i></a>`;
+            container.appendChild(prevLi);
+            
+            // Páginas
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>`;
+                container.appendChild(li);
+            }
+            
+            // Próximo
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1})"><i class="bi bi-chevron-right"></i></a>`;
+            container.appendChild(nextLi);
+        }
+        
+        function goToPage(page) {
+            currentPage = page;
+            loadLeads();
+        }
+        
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                loadLeads();
+            }, 300);
+        }
+        
+        function limparFiltros() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-cidade').value = '';
+            document.getElementById('filter-status').value = '';
+            currentPage = 1;
+            loadLeads();
+        }
+        
+        function openLeadModal(leadId) {
+            currentLeadId = leadId;
+            
+            fetch(`/api/leads/${leadId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const lead = data.lead;
+                    
+                    document.getElementById('modal-lead-nome').textContent = lead.nome || 'Sem nome';
+                    document.getElementById('modal-lead-telefone').textContent = lead.telefone;
+                    document.getElementById('modal-lead-cidade').textContent = lead.cidade;
+                    document.getElementById('modal-lead-endereco').textContent = lead.endereco || 'Não informado';
+                    document.getElementById('modal-lead-tipo').textContent = lead.tipo_servico || 'Não informado';
+                    document.getElementById('modal-lead-avaliacao').textContent = lead.avaliacao || 'Não informado';
+                    document.getElementById('modal-lead-status').value = lead.status;
+                    
+                    document.getElementById('modal-whatsapp-link').href = `https://wa.me/${lead.telefone}`;
+                    document.getElementById('modal-lead-maps').href = lead.link_maps || '#';
+                    
+                    // Anotações
+                    let anotacoesHtml = '';
+                    data.anotacoes.forEach(anotacao => {
+                        anotacoesHtml += `
+                            <div class="anotacao-item">
+                                <div class="date">${new Date(anotacao.created_at).toLocaleString('pt-BR')}</div>
+                                <div>${anotacao.texto}</div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('modal-anotacoes').innerHTML = anotacoesHtml || '<p class="text-muted">Nenhuma anotação</p>';
+                    
+                    // Histórico
+                    let historicoHtml = '';
+                    data.historico.forEach(item => {
+                        historicoHtml += `
+                            <div class="historico-item">
+                                <small class="text-muted">${new Date(item.created_at).toLocaleString('pt-BR')}</small>
+                                <br>${item.descricao}
+                            </div>
+                        `;
+                    });
+                    document.getElementById('modal-historico').innerHTML = historicoHtml || '<p class="text-muted">Nenhum histórico</p>';
+                    
+                    document.getElementById('nova-anotacao').value = '';
+                    
+                    new bootstrap.Modal(document.getElementById('leadModal')).show();
+                });
+        }
+        
+        function updateLeadStatus() {
+            const novoStatus = document.getElementById('modal-lead-status').value;
+            
+            fetch(`/api/leads/${currentLeadId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: novoStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadLeads();
+                    loadStats();
+                }
+            });
+        }
+        
+        // Alteração rápida de status diretamente na tabela
+        function alterarStatusRapido(leadId, novoStatus) {
+            fetch(`/api/leads/${leadId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: novoStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadLeads();
+                    loadStats();
+                    // Mostrar feedback visual
+                    showToast(`Status alterado para ${novoStatus.replace('_', ' ')}`);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao alterar status:', error);
+                showToast('Erro ao alterar status', 'error');
+            });
+        }
+        
+        // Toast de notificação
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'} me-2"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+        
+        function addAnotacao() {
+            const texto = document.getElementById('nova-anotacao').value.trim();
+            if (!texto) return;
+            
+            fetch(`/api/leads/${currentLeadId}/anotacao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto: texto })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    openLeadModal(currentLeadId);
+                }
+            });
+        }
+        
+        function importarDados() {
+            const btn = document.getElementById('btn-importar');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Importando...';
+            
+            fetch('/api/importar', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i> Importar Dados';
+                    
+                    document.getElementById('import-result').style.display = 'block';
+                    document.getElementById('import-message').textContent = 
+                        `Importação concluída! ${data.total_importados} novos leads foram importados.`;
+                    
+                    loadStats();
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i> Importar Dados';
+                    alert('Erro ao importar dados');
+                });
+        }
+        
+        function exportarLeads() {
+            const cidade = document.getElementById('filter-cidade')?.value || '';
+            const status = document.getElementById('filter-status')?.value || '';
+            
+            window.location.href = `/api/exportar?cidade=${encodeURIComponent(cidade)}&status=${encodeURIComponent(status)}`;
+        }
+        
+        // ==================== ATUALIZAÇÃO EM MASSA ====================
+        
+        let arquivoSelecionado = null;
+        let colunasArquivo = [];
+        
+        function previewArquivo() {
+            const input = document.getElementById('arquivo-atualizacao');
+            const file = input.files[0];
+            
+            if (!file) return;
+            
+            arquivoSelecionado = file;
+            
+            // Criar FormData para enviar
+            const formData = new FormData();
+            formData.append('arquivo', file);
+            
+            // Mostrar loading
+            document.getElementById('step-upload').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Analisando arquivo...</p>
+                </div>
+            `;
+            
+            fetch('/api/preview-colunas', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    colunasArquivo = data.colunas;
+                    
+                    // Preencher select de colunas
+                    const select = document.getElementById('coluna-telefone');
+                    select.innerHTML = '';
+                    data.colunas.forEach(col => {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        option.textContent = col;
+                        if (col === data.sugestao) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                    
+                    // Preencher preview da tabela
+                    const thead = document.getElementById('preview-thead');
+                    const tbody = document.getElementById('preview-tbody');
+                    
+                    thead.innerHTML = '<tr>' + data.colunas.map(col => `<th>${col}</th>`).join('') + '</tr>';
+                    tbody.innerHTML = data.preview.map(row => 
+                        '<tr>' + data.colunas.map(col => `<td>${row[col] || ''}</td>`).join('') + '</tr>'
+                    ).join('');
+                    
+                    // Restaurar step-upload e mostrar config
+                    document.getElementById('step-upload').innerHTML = `
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">1. Arquivo selecionado</label>
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-file-earmark-check me-2"></i>
+                                <strong>${file.name}</strong> - ${data.colunas.length} colunas encontradas
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('step-config').style.display = 'block';
+                    document.getElementById('step-resultado').style.display = 'none';
+                } else {
+                    alert('Erro ao analisar arquivo: ' + data.error);
+                    resetarUpload();
+                }
+            })
+            .catch(error => {
+                alert('Erro ao analisar arquivo');
+                resetarUpload();
+            });
+        }
+        
+        function resetarUpload() {
+            arquivoSelecionado = null;
+            colunasArquivo = [];
+            
+            document.getElementById('step-upload').innerHTML = `
+                <div class="mb-4">
+                    <label class="form-label fw-bold">1. Selecione o arquivo</label>
+                    <input type="file" class="form-control form-control-lg" id="arquivo-atualizacao" 
+                           accept=".csv,.xlsx,.xls" onchange="previewArquivo()">
+                    <small class="text-muted">Formatos aceitos: CSV, Excel (.xlsx, .xls)</small>
+                </div>
+            `;
+            
+            document.getElementById('step-config').style.display = 'none';
+            document.getElementById('step-resultado').style.display = 'none';
+        }
+        
+        function executarAtualizacao() {
+            const input = document.getElementById('arquivo-atualizacao');
+            const file = input?.files?.[0] || arquivoSelecionado;
+            
+            if (!file) {
+                alert('Selecione um arquivo primeiro');
+                return;
+            }
+            
+            const colunaTelefone = document.getElementById('coluna-telefone').value;
+            const novoStatus = document.getElementById('novo-status-massa').value;
+            
+            // Criar FormData
+            const formData = new FormData();
+            formData.append('arquivo', file);
+            formData.append('coluna_telefone', colunaTelefone);
+            formData.append('status', novoStatus);
+            
+            // Mostrar loading
+            const btn = document.getElementById('btn-atualizar-massa');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Atualizando...';
+            
+            fetch('/api/atualizar-em-massa', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-all me-2"></i>Atualizar Contatos';
+                
+                if (data.success) {
+                    // Mostrar resultado
+                    document.getElementById('step-config').style.display = 'none';
+                    document.getElementById('step-resultado').style.display = 'block';
+                    
+                    const statusLabels = {
+                        'novo': 'Novo',
+                        'em_contato': 'Em Contato',
+                        'convertido': 'Convertido',
+                        'perdido': 'Perdido'
+                    };
+                    
+                    document.getElementById('resultado-mensagem').innerHTML = `
+                        <strong>${data.total_atualizados}</strong> contatos atualizados para 
+                        <span class="badge bg-primary">${statusLabels[data.novo_status]}</span>
+                        de ${data.total_planilha} números na planilha.
+                        <br><small>Coluna utilizada: "${data.coluna_usada}"</small>
+                    `;
+                    
+                    // Lista de atualizados
+                    const listaAtualizados = document.getElementById('lista-atualizados');
+                    if (data.atualizados.length > 0) {
+                        listaAtualizados.innerHTML = data.atualizados.map(item => 
+                            `<li><i class="bi bi-check text-success me-1"></i>${item.telefone_planilha}</li>`
+                        ).join('');
+                        if (data.total_atualizados > 50) {
+                            listaAtualizados.innerHTML += `<li class="text-muted">... e mais ${data.total_atualizados - 50}</li>`;
+                        }
+                    } else {
+                        listaAtualizados.innerHTML = '<li class="text-muted">Nenhum</li>';
+                    }
+                    
+                    // Lista de não encontrados
+                    const listaNaoEncontrados = document.getElementById('lista-nao-encontrados');
+                    if (data.nao_encontrados.length > 0) {
+                        listaNaoEncontrados.innerHTML = data.nao_encontrados.map(tel => 
+                            `<li><i class="bi bi-x text-warning me-1"></i>${tel}</li>`
+                        ).join('');
+                        if (data.total_nao_encontrados > 50) {
+                            listaNaoEncontrados.innerHTML += `<li class="text-muted">... e mais ${data.total_nao_encontrados - 50}</li>`;
+                        }
+                    } else {
+                        listaNaoEncontrados.innerHTML = '<li class="text-muted">Todos encontrados!</li>';
+                    }
+                    
+                    // Atualizar stats
+                    loadStats();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            })
+            .catch(error => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-all me-2"></i>Atualizar Contatos';
+                alert('Erro ao atualizar contatos');
+            });
+        }
+        
+        // ==================== WHATSAPP ====================
+        
+        let modoEnvio = 'individual';
+        let leadsParaEnvio = [];
+        let templatesWpp = [];
+        let envioInterval = null;
+        
+        function initWhatsApp() {
+            carregarConfigZAPI();
+            verificarConexaoWhatsapp();
+            carregarTemplates();
+            carregarStatsWhatsapp();
+            carregarHistoricoWhatsapp();
+            carregarCidadesWhatsapp();
+            
+            // Event listener para preview
+            document.getElementById('wpp-mensagem').addEventListener('input', atualizarPreview);
+            document.getElementById('wpp-nome').addEventListener('input', atualizarPreview);
+        }
+        
+        function carregarConfigZAPI() {
+            fetch('/api/whatsapp/config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('zapi-instance').value = data.instance_id || '';
+                    document.getElementById('zapi-token').value = data.token || '';
+                    document.getElementById('zapi-client-token').value = data.client_token || '';
+                    document.getElementById('zapi-nome').value = data.nome_instancia || '';
+                });
+        }
+        
+        function salvarConfigZAPI() {
+            const config = {
+                instance_id: document.getElementById('zapi-instance').value,
+                token: document.getElementById('zapi-token').value,
+                client_token: document.getElementById('zapi-client-token').value,
+                nome_instancia: document.getElementById('zapi-nome').value
+            };
+            
+            fetch('/api/whatsapp/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Configurações salvas com sucesso!');
+                    verificarConexaoWhatsapp();
+                }
+            });
+        }
+        
+        function verificarConexaoWhatsapp() {
+            const badge = document.getElementById('whatsapp-status-badge');
+            badge.className = 'badge bg-secondary me-2';
+            badge.innerHTML = '<i class="bi bi-circle-fill me-1"></i> Verificando...';
+            
+            fetch('/api/whatsapp/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status Z-API:', data); // Debug
+                    
+                    // Z-API pode retornar connected: true ou session: "connected"
+                    const isConnected = data.connected === true || 
+                                       data.session === 'connected' ||
+                                       data.smartphoneConnected === true;
+                    
+                    if (isConnected) {
+                        badge.className = 'badge bg-success me-2';
+                        badge.innerHTML = '<i class="bi bi-circle-fill me-1"></i> Conectado';
+                    } else if (data.error) {
+                        badge.className = 'badge bg-warning me-2';
+                        badge.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> ' + (data.error.substring(0, 20) || 'Erro');
+                        badge.title = data.error;
+                    } else {
+                        badge.className = 'badge bg-danger me-2';
+                        badge.innerHTML = '<i class="bi bi-circle-fill me-1"></i> Desconectado';
+                        badge.title = JSON.stringify(data.raw || data);
+                    }
+                })
+                .catch((err) => {
+                    console.error('Erro ao verificar status:', err);
+                    badge.className = 'badge bg-danger me-2';
+                    badge.innerHTML = '<i class="bi bi-circle-fill me-1"></i> Erro de conexão';
+                });
+        }
+        
+        function carregarTemplates() {
+            fetch('/api/whatsapp/templates')
+                .then(response => response.json())
+                .then(data => {
+                    templatesWpp = data;
+                    const select = document.getElementById('wpp-template');
+                    select.innerHTML = '<option value="">Selecione um template...</option>';
+                    data.forEach(t => {
+                        select.innerHTML += `<option value="${t.key}">${t.nome} - ${t.descricao}</option>`;
+                    });
+                });
+        }
+        
+        function selecionarTemplate() {
+            const key = document.getElementById('wpp-template').value;
+            const template = templatesWpp.find(t => t.key === key);
+            if (template) {
+                document.getElementById('wpp-mensagem').value = template.mensagem;
+                atualizarPreview();
+            }
+        }
+        
+        function atualizarPreview() {
+            const mensagem = document.getElementById('wpp-mensagem').value;
+            const nome = document.getElementById('wpp-nome').value || 'Cliente';
+            
+            let preview = mensagem
+                .replace(/{nome}/g, nome)
+                .replace(/{cidade}/g, 'São Paulo')
+                .replace(/{tipo_servico}/g, 'serviços')
+                .replace(/{endereco}/g, 'Endereço exemplo');
+            
+            document.getElementById('wpp-preview').textContent = preview || 'A mensagem aparecerá aqui...';
+        }
+        
+        function carregarStatsWhatsapp() {
+            fetch('/api/whatsapp/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('stat-wpp-total').textContent = data.total;
+                    document.getElementById('stat-wpp-sucesso').textContent = data.enviados;
+                    document.getElementById('stat-wpp-falha').textContent = data.falhou;
+                    document.getElementById('stat-wpp-hoje').textContent = data.hoje;
+                });
+        }
+        
+        function carregarHistoricoWhatsapp() {
+            fetch('/api/whatsapp/history?per_page=20')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('wpp-history-tbody');
+                    
+                    if (data.messages.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    Nenhuma mensagem enviada ainda
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    tbody.innerHTML = data.messages.map(msg => `
+                        <tr>
+                            <td><small>${new Date(msg.sent_at).toLocaleString('pt-BR')}</small></td>
+                            <td>${msg.lead_nome || 'Desconhecido'}</td>
+                            <td>${msg.telefone}</td>
+                            <td>
+                                ${msg.status === 'enviado' 
+                                    ? '<span class="badge bg-success">Enviado</span>' 
+                                    : '<span class="badge bg-danger">Falhou</span>'}
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+        
+        function carregarCidadesWhatsapp() {
+            fetch('/api/cidades')
+                .then(response => response.json())
+                .then(cidades => {
+                    const select = document.getElementById('wpp-filter-cidade');
+                    select.innerHTML = '<option value="">Todas</option>';
+                    cidades.forEach(cidade => {
+                        select.innerHTML += `<option value="${cidade}">${cidade}</option>`;
+                    });
+                });
+        }
+        
+        function setModoEnvio(modo) {
+            modoEnvio = modo;
+            document.getElementById('modo-individual').style.display = modo === 'individual' ? 'block' : 'none';
+            document.getElementById('modo-massa').style.display = modo === 'massa' ? 'block' : 'none';
+            
+            document.getElementById('btn-modo-individual').classList.toggle('active', modo === 'individual');
+            document.getElementById('btn-modo-massa').classList.toggle('active', modo === 'massa');
+            
+            if (modo === 'individual') {
+                document.getElementById('btn-enviar-wpp').innerHTML = '<i class="bi bi-send me-2"></i> Enviar Mensagem';
+            } else {
+                document.getElementById('btn-enviar-wpp').innerHTML = '<i class="bi bi-send me-2"></i> Iniciar Envio em Massa';
+            }
+        }
+        
+        function carregarLeadsParaEnvio() {
+            const cidade = document.getElementById('wpp-filter-cidade').value;
+            const status = document.getElementById('wpp-filter-status').value;
+            const limite = document.getElementById('wpp-limite').value;
+            
+            let url = `/api/leads?per_page=${limite}&cidade=${encodeURIComponent(cidade)}&status=${encodeURIComponent(status)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    leadsParaEnvio = data.leads;
+                    document.getElementById('qtd-leads-selecionados').textContent = data.leads.length;
+                    document.getElementById('leads-selecionados-container').style.display = 'block';
+                });
+        }
+        
+        function enviarWhatsApp() {
+            if (modoEnvio === 'individual') {
+                enviarIndividual();
+            } else {
+                enviarEmMassa();
+            }
+        }
+        
+        function alterarTipoConteudo() {
+            const tipo = document.querySelector('input[name="tipoConteudo"]:checked').value;
+            const campoMidia = document.getElementById('campo-midia');
+            const labelMidia = document.getElementById('label-midia');
+            const labelMensagem = document.getElementById('label-mensagem');
+            const inputMidia = document.getElementById('wpp-url-midia');
+            
+            if (tipo === 'texto') {
+                campoMidia.style.display = 'none';
+                labelMensagem.textContent = 'Mensagem';
+            } else if (tipo === 'imagem') {
+                campoMidia.style.display = 'block';
+                labelMidia.textContent = 'URL da Imagem';
+                labelMensagem.textContent = 'Legenda da Imagem (opcional)';
+                inputMidia.placeholder = 'https://exemplo.com/imagem.jpg';
+            } else if (tipo === 'video') {
+                campoMidia.style.display = 'block';
+                labelMidia.textContent = 'URL do Vídeo';
+                labelMensagem.textContent = 'Legenda do Vídeo (opcional)';
+                inputMidia.placeholder = 'https://exemplo.com/video.mp4';
+            }
+            
+            // Limpar preview
+            document.getElementById('preview-midia').style.display = 'none';
+            document.getElementById('preview-imagem').style.display = 'none';
+            document.getElementById('preview-video').style.display = 'none';
+        }
+        
+        // Preview de mídia ao digitar URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputMidia = document.getElementById('wpp-url-midia');
+            if (inputMidia) {
+                inputMidia.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    const tipo = document.querySelector('input[name="tipoConteudo"]:checked').value;
+                    const previewContainer = document.getElementById('preview-midia');
+                    const previewImg = document.getElementById('preview-imagem');
+                    const previewVideo = document.getElementById('preview-video');
+                    
+                    if (url) {
+                        previewContainer.style.display = 'block';
+                        if (tipo === 'imagem') {
+                            previewImg.src = url;
+                            previewImg.style.display = 'block';
+                            previewVideo.style.display = 'none';
+                        } else if (tipo === 'video') {
+                            previewVideo.src = url;
+                            previewVideo.style.display = 'block';
+                            previewImg.style.display = 'none';
+                        }
+                    } else {
+                        previewContainer.style.display = 'none';
+                    }
+                });
+            }
+        });
+        
+        function enviarIndividual() {
+            const telefone = document.getElementById('wpp-telefone').value.trim();
+            const mensagem = document.getElementById('wpp-mensagem').value.trim();
+            const nome = document.getElementById('wpp-nome').value.trim();
+            const template = document.getElementById('wpp-template').value;
+            const tipoConteudo = document.querySelector('input[name="tipoConteudo"]:checked').value;
+            const urlMidia = document.getElementById('wpp-url-midia')?.value.trim() || '';
+            
+            if (!telefone) {
+                alert('Digite um telefone');
+                return;
+            }
+            
+            if (tipoConteudo === 'texto' && !mensagem) {
+                alert('Digite uma mensagem');
+                return;
+            }
+            
+            if ((tipoConteudo === 'imagem' || tipoConteudo === 'video') && !urlMidia) {
+                alert('Cole a URL da ' + (tipoConteudo === 'imagem' ? 'imagem' : 'vídeo'));
+                return;
+            }
+            
+            // Substituir variáveis
+            let msgFinal = mensagem.replace(/{nome}/g, nome || 'Cliente');
+            
+            const btn = document.getElementById('btn-enviar-wpp');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
+            
+            let endpoint = '/api/whatsapp/send';
+            let payload = {
+                telefone: telefone,
+                template: template
+            };
+            
+            if (tipoConteudo === 'texto') {
+                payload.mensagem = msgFinal;
+            } else if (tipoConteudo === 'imagem') {
+                endpoint = '/api/whatsapp/send-image';
+                payload.url_imagem = urlMidia;
+                payload.caption = msgFinal;
+            } else if (tipoConteudo === 'video') {
+                endpoint = '/api/whatsapp/send-video';
+                payload.url_video = urlMidia;
+                payload.caption = msgFinal;
+            }
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send me-2"></i> Enviar Mensagem';
+                
+                if (data.success) {
+                    const tipoLabel = tipoConteudo === 'imagem' ? 'Imagem' : (tipoConteudo === 'video' ? 'Vídeo' : 'Mensagem');
+                    alert(tipoLabel + ' enviada com sucesso!');
+                    document.getElementById('wpp-telefone').value = '';
+                    document.getElementById('wpp-nome').value = '';
+                    if (document.getElementById('wpp-url-midia')) {
+                        document.getElementById('wpp-url-midia').value = '';
+                    }
+                    carregarStatsWhatsapp();
+                    carregarHistoricoWhatsapp();
+                } else {
+                    alert('Erro ao enviar: ' + (data.error || 'Erro desconhecido'));
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send me-2"></i> Enviar Mensagem';
+                alert('Erro ao enviar mensagem');
+            });
+        }
+        
+        function enviarEmMassa() {
+            if (leadsParaEnvio.length === 0) {
+                alert('Carregue os leads primeiro clicando em "Buscar Leads"');
+                return;
+            }
+            
+            const mensagem = document.getElementById('wpp-mensagem').value.trim();
+            if (!mensagem) {
+                alert('Digite uma mensagem');
+                return;
+            }
+            
+            const intervaloMin = parseInt(document.getElementById('wpp-intervalo-min').value);
+            const intervaloMax = parseInt(document.getElementById('wpp-intervalo-max').value);
+            const template = document.getElementById('wpp-template').value;
+            
+            if (!confirm(`Deseja enviar mensagens para ${leadsParaEnvio.length} leads?\n\nIntervalo: ${intervaloMin}-${intervaloMax} segundos entre cada mensagem.`)) {
+                return;
+            }
+            
+            const leadIds = leadsParaEnvio.map(l => l.id);
+            
+            const btn = document.getElementById('btn-enviar-wpp');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Iniciando...';
+            
+            fetch('/api/whatsapp/send-bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lead_ids: leadIds,
+                    mensagem: mensagem,
+                    intervalo_min: intervaloMin,
+                    intervalo_max: intervaloMax,
+                    template: template
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('envio-progress-container').style.display = 'block';
+                    btn.style.display = 'none';
+                    monitorarEnvio();
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send me-2"></i> Iniciar Envio em Massa';
+                    alert('Erro: ' + data.error);
+                }
+            });
+        }
+        
+        function monitorarEnvio() {
+            envioInterval = setInterval(() => {
+                fetch('/api/whatsapp/send-bulk/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        const percent = data.total > 0 ? (data.enviados / data.total * 100).toFixed(0) : 0;
+                        
+                        document.getElementById('envio-progress-bar').style.width = percent + '%';
+                        document.getElementById('envio-progress-bar').textContent = percent + '%';
+                        document.getElementById('envio-progress-text').textContent = `${data.enviados}/${data.total}`;
+                        document.getElementById('envio-sucesso').textContent = data.sucesso;
+                        document.getElementById('envio-falha').textContent = data.falha;
+                        
+                        if (!data.ativo) {
+                            clearInterval(envioInterval);
+                            finalizarEnvio(data);
+                        }
+                    });
+            }, 1000);
+        }
+        
+        function finalizarEnvio(data) {
+            const btn = document.getElementById('btn-enviar-wpp');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-2"></i> Iniciar Envio em Massa';
+            btn.style.display = 'inline-block';
+            
+            document.getElementById('envio-progress-container').style.display = 'none';
+            
+            if (data.cancelado) {
+                alert(`Envio cancelado!\n\nEnviados: ${data.enviados}/${data.total}\nSucesso: ${data.sucesso}\nFalhas: ${data.falha}`);
+            } else {
+                alert(`Envio concluído!\n\nTotal: ${data.total}\nSucesso: ${data.sucesso}\nFalhas: ${data.falha}`);
+            }
+            
+            carregarStatsWhatsapp();
+            carregarHistoricoWhatsapp();
+            leadsParaEnvio = [];
+            document.getElementById('leads-selecionados-container').style.display = 'none';
+        }
+        
+        function cancelarEnvio() {
+            if (confirm('Deseja cancelar o envio em massa?')) {
+                fetch('/api/whatsapp/send-bulk/cancel', { method: 'POST' });
+            }
+        }
+        
+        // Função para iniciar chat no WhatsApp interno
+        async function iniciarChatWhatsApp(leadId) {
+            try {
+                const response = await fetch(`/api/leads/${leadId}/start-chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Abrir a página de chat em nova aba
+                    window.open('/', '_blank');
+                } else {
+                    alert(data.error || 'Erro ao iniciar chat');
+                }
+            } catch (e) {
+                console.error('Erro:', e);
+                alert('Erro ao conectar com o servidor');
+            }
+        }
+    </script>
+</body>
+</html>

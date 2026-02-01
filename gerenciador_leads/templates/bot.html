@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot IA - Smart Reforço</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        .sidebar .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+        }
+        
+        /* Cards */
+        .config-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        
+        .config-card h5 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .config-card h5 i {
+            color: var(--primary-color);
+        }
+        
+        /* Status Banner */
+        .status-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .status-banner.offline {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        }
+        
+        .status-banner h4 {
+            margin: 0 0 10px 0;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Chat Test Area */
+        .chat-test {
+            background: #f8fafc;
+            border-radius: 12px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .chat-message.user {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-message.bot {
+            background: white;
+            border: 1px solid #e2e8f0;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            padding: 12px 20px;
+        }
+        
+        .chat-input button {
+            border-radius: 25px;
+            padding: 12px 25px;
+        }
+        
+        /* Model Cards */
+        .model-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .model-card:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .model-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        
+        .model-card .name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .model-card .ram {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        
+        .model-card .badge-ram {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        /* Quick Responses */
+        .quick-response-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .quick-response-item .trigger {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        /* Schedule Grid */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .day-toggle {
+            text-align: center;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .day-toggle.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .day-toggle .abbr {
+            font-weight: bold;
+        }
+        
+        /* Personality Card */
+        .personality-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+        }
+        
+        .personality-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .personality-card.active {
+            border-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        
+        .personality-card .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Provider Toggle */
+        .provider-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .provider-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .provider-btn:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .provider-btn.active {
+            border-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        
+        .provider-btn .icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        .provider-btn .name {
+            font-weight: 600;
+        }
+        
+        .badge-free {
+            background: #10b981;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-banner.cloud {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .api-key-input {
+            position: relative;
+        }
+        
+        .api-key-input .toggle-visibility {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-robot"></i> Bot IA
+        </div>
+        
+        <nav>
+            <a href="/leads" class="nav-link">
+                <i class="bi bi-people"></i> Leads
+            </a>
+            <a href="/" class="nav-link">
+                <i class="bi bi-whatsapp"></i> WhatsApp
+            </a>
+            <a href="/crm" class="nav-link">
+                <i class="bi bi-kanban"></i> Pipeline
+            </a>
+            <a href="/bot" class="nav-link active">
+                <i class="bi bi-robot"></i> Bot IA
+            </a>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <a href="https://ollama.ai" target="_blank" class="text-white-50" style="text-decoration: none;">
+                    <small>Powered by Ollama</small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Status Banner -->
+        <div class="status-banner" id="status-banner">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4><i class="bi bi-robot"></i> <span id="banner-title">Bot IA</span></h4>
+                    <p class="mb-2" id="banner-desc">Atendimento automático com inteligência artificial</p>
+                    <div class="status-indicator" id="status-indicator">
+                        <span class="status-dot"></span>
+                        <span id="status-text">Verificando...</span>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-light" onclick="toggleBot()" id="btn-toggle">
+                        <i class="bi bi-power"></i> Ativar Bot
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Coluna Esquerda -->
+            <div class="col-lg-6">
+                <!-- Escolher Provedor -->
+                <div class="config-card">
+                    <h5><i class="bi bi-cloud"></i> Provedor de IA</h5>
+                    
+                    <div class="provider-toggle">
+                        <div class="provider-btn" id="provider-cloud" onclick="selectProvider('cloud')">
+                            <div class="icon">☁️</div>
+                            <div class="name">Cloud AI</div>
+                            <div><span class="badge-free">RÁPIDO</span></div>
+                        </div>
+                        <div class="provider-btn" id="provider-ollama" onclick="selectProvider('ollama')">
+                            <div class="icon">💻</div>
+                            <div class="name">Ollama Local</div>
+                            <div><small class="text-muted">Offline</small></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cloud AI Config -->
+                    <div id="cloud-config" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Provedor</label>
+                            <select class="form-select" id="cloud-provider" onchange="onCloudProviderChange()">
+                                <option value="gemini">🟢 Google Gemini (GRÁTIS)</option>
+                                <option value="openai">OpenAI (ChatGPT)</option>
+                                <option value="claude">Anthropic Claude</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <div class="api-key-input">
+                                <input type="password" class="form-control" id="cloud-api-key" 
+                                       placeholder="Cole sua API Key aqui" style="padding-right: 40px;">
+                                <i class="bi bi-eye toggle-visibility" onclick="toggleApiKeyVisibility()"></i>
+                            </div>
+                            <small class="text-muted">
+                                <a href="https://aistudio.google.com/app/apikey" id="get-key-link" target="_blank">
+                                    📎 Obter API Key gratuita →
+                                </a>
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Modelo</label>
+                            <select class="form-select" id="cloud-model">
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Rápido)</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Novo)</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Capaz)</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="testCloudConnection()">
+                            <i class="bi bi-check-circle"></i> Testar Conexão
+                        </button>
+                    </div>
+                    
+                    <!-- Ollama Config -->
+                    <div id="ollama-config">
+                        <div class="row g-3" id="models-list">
+                            <!-- Models loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modelo LLM (mover temperatura para cá) -->
+                
+                <!-- Configurações -->
+                <div class="config-card">
+                    <h5><i class="bi bi-sliders"></i> Configurações</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Temperatura (Criatividade)</label>
+                        <input type="range" class="form-range" id="temperatura" min="0" max="1" step="0.1" value="0.7">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Preciso (0.0)</span>
+                            <span id="temp-value">0.7</span>
+                            <span>Criativo (1.0)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Horário Início</label>
+                            <input type="time" class="form-control" id="horario-inicio" value="08:00">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Horário Fim</label>
+                            <input type="time" class="form-control" id="horario-fim" value="18:00">
+                        </div>
+                    </div>
+                    
+                    <label class="form-label">Dias da Semana</label>
+                    <div class="schedule-grid" id="days-grid">
+                        <div class="day-toggle active" data-day="1" onclick="toggleDay(this)">
+                            <div class="abbr">Seg</div>
+                        </div>
+                        <div class="day-toggle active" data-day="2" onclick="toggleDay(this)">
+                            <div class="abbr">Ter</div>
+                        </div>
+                        <div class="day-toggle active" data-day="3" onclick="toggleDay(this)">
+                            <div class="abbr">Qua</div>
+                        </div>
+                        <div class="day-toggle active" data-day="4" onclick="toggleDay(this)">
+                            <div class="abbr">Qui</div>
+                        </div>
+                        <div class="day-toggle active" data-day="5" onclick="toggleDay(this)">
+                            <div class="abbr">Sex</div>
+                        </div>
+                        <div class="day-toggle" data-day="6" onclick="toggleDay(this)">
+                            <div class="abbr">Sab</div>
+                        </div>
+                        <div class="day-toggle" data-day="0" onclick="toggleDay(this)">
+                            <div class="abbr">Dom</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary mt-3" onclick="saveConfig()">
+                        <i class="bi bi-save"></i> Salvar Configurações
+                    </button>
+                </div>
+                
+                <!-- Personalidade -->
+                <div class="config-card">
+                    <h5><i class="bi bi-person-hearts"></i> Personalidade do Bot</h5>
+                    
+                    <div class="row g-3 mb-3" id="personalities-list">
+                        <!-- Personalities loaded here -->
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="form-label">Prompt do Sistema</label>
+                        <textarea class="form-control" id="system-prompt" rows="4" placeholder="Defina como o bot deve se comportar..."></textarea>
+                        <small class="text-muted">Este texto define a personalidade e instruções do bot.</small>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary mt-3" onclick="savePersonality()">
+                        <i class="bi bi-save"></i> Salvar Personalidade
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Coluna Direita -->
+            <div class="col-lg-6">
+                <!-- Teste do Bot -->
+                <div class="config-card">
+                    <h5><i class="bi bi-chat-dots"></i> Testar Bot</h5>
+                    
+                    <div class="chat-test">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="chat-message bot">
+                                Olá! Sou o assistente virtual. Como posso ajudar?
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="test-message" placeholder="Digite uma mensagem..." 
+                                   onkeypress="if(event.key==='Enter') sendTestMessage()">
+                            <button class="btn btn-primary" onclick="sendTestMessage()">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Respostas Rápidas -->
+                <div class="config-card">
+                    <h5><i class="bi bi-lightning"></i> Respostas Rápidas (FAQ)</h5>
+                    <p class="text-muted small">Respostas automáticas para perguntas frequentes</p>
+                    
+                    <div id="quick-responses-list">
+                        <!-- Quick responses loaded here -->
+                    </div>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="new-trigger" placeholder="Gatilho (ex: preço)">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="new-response" placeholder="Resposta automática">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="addQuickResponse()">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instalação Ollama -->
+                <div class="config-card" id="install-card" style="display: none;">
+                    <h5><i class="bi bi-download"></i> Instalar Ollama</h5>
+                    <p class="text-muted">O Ollama é necessário para rodar a IA localmente.</p>
+                    
+                    <div class="alert alert-info">
+                        <strong>Passo 1:</strong> Baixe e instale o Ollama<br>
+                        <a href="https://ollama.ai/download" target="_blank" class="btn btn-sm btn-primary mt-2">
+                            <i class="bi bi-download"></i> Download Ollama
+                        </a>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Passo 2:</strong> Após instalar, execute no terminal:<br>
+                        <code class="d-block mt-2 p-2 bg-dark text-white rounded">ollama pull mistral</code>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Passo 3:</strong> Inicie o servidor Ollama:<br>
+                        <code class="d-block mt-2 p-2 bg-dark text-white rounded">ollama serve</code>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="checkStatus()">
+                        <i class="bi bi-arrow-clockwise"></i> Verificar Novamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let botConfig = {};
+        let ollamaOnline = false;
+        let cloudOnline = false;
+        let useCloud = false;
+        let selectedModel = 'mistral';
+        let selectedPersonality = 1;
+        
+        // Links para API Keys
+        const apiKeyLinks = {
+            'gemini': 'https://aistudio.google.com/app/apikey',
+            'openai': 'https://platform.openai.com/api-keys',
+            'claude': 'https://console.anthropic.com/'
+        };
+        
+        // Modelos por provedor Cloud
+        const cloudModels = {
+            'gemini': [
+                { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Rápido)' },
+                { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Novo)' },
+                { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (Capaz)' }
+            ],
+            'openai': [
+                { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Barato)' },
+                { value: 'gpt-4o', label: 'GPT-4o (Capaz)' },
+                { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+            ],
+            'claude': [
+                { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Rápido)' },
+                { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' }
+            ]
+        };
+        
+        // Modelos recomendados Ollama
+        const modelosRecomendados = {
+            'tinyllama': { nome: 'TinyLlama', ram: '~1GB', desc: 'Ultra leve', badge: 'warning' },
+            'phi': { nome: 'Microsoft Phi-2', ram: '~3GB', desc: 'Rápido e compacto', badge: 'info' },
+            'mistral': { nome: 'Mistral 7B', ram: '~4GB', desc: 'Melhor custo-benefício', badge: 'success' },
+            'gemma:2b': { nome: 'Google Gemma 2B', ram: '~2GB', desc: 'Leve e eficiente', badge: 'primary' }
+        };
+        
+        // Personalidades padrão
+        const personalidadesPadrao = [
+            { id: 'profissional', icon: '👔', nome: 'Profissional', desc: 'Formal e objetivo' },
+            { id: 'amigavel', icon: '😊', nome: 'Amigável', desc: 'Simpático e prestativo' },
+            { id: 'vendedor', icon: '💼', nome: 'Vendedor', desc: 'Persuasivo e proativo' },
+            { id: 'custom', icon: '⚙️', nome: 'Personalizado', desc: 'Defina seu próprio' }
+        ];
+        
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderModels();
+            renderPersonalities();
+            checkStatus();
+            loadConfig();
+            loadQuickResponses();
+            
+            document.getElementById('temperatura').addEventListener('input', (e) => {
+                document.getElementById('temp-value').textContent = e.target.value;
+            });
+        });
+        
+        // ==================== PROVIDER SELECTION ====================
+        function selectProvider(type) {
+            useCloud = (type === 'cloud');
+            
+            document.getElementById('provider-cloud').classList.toggle('active', useCloud);
+            document.getElementById('provider-ollama').classList.toggle('active', !useCloud);
+            document.getElementById('cloud-config').style.display = useCloud ? 'block' : 'none';
+            document.getElementById('ollama-config').style.display = useCloud ? 'none' : 'block';
+            
+            updateBannerUI();
+        }
+        
+        function onCloudProviderChange() {
+            const provider = document.getElementById('cloud-provider').value;
+            document.getElementById('get-key-link').href = apiKeyLinks[provider];
+            
+            // Atualizar modelos
+            const modelSelect = document.getElementById('cloud-model');
+            modelSelect.innerHTML = cloudModels[provider].map(m => 
+                `<option value="${m.value}">${m.label}</option>`
+            ).join('');
+        }
+        
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('cloud-api-key');
+            const icon = document.querySelector('.toggle-visibility');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+        
+        function testCloudConnection() {
+            const provider = document.getElementById('cloud-provider').value;
+            const apiKey = document.getElementById('cloud-api-key').value;
+            
+            if (!apiKey) {
+                alert('Informe a API Key');
+                return;
+            }
+            
+            // Salvar e testar
+            fetch('/api/bot/config', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    usar_cloud: 1,
+                    cloud_provider: provider,
+                    cloud_api_key: apiKey,
+                    cloud_model: document.getElementById('cloud-model').value
+                })
+            })
+            .then(() => {
+                setTimeout(() => {
+                    checkStatus();
+                    alert('Configuração salva! Verificando conexão...');
+                }, 500);
+            });
+        }
+        
+        // ==================== STATUS ====================
+        function checkStatus() {
+            fetch('/api/bot/status')
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Bot status:', data);
+                    botConfig = data;
+                    
+                    if (data.mode === 'cloud') {
+                        useCloud = true;
+                        cloudOnline = data.cloud_online || false;
+                        selectProvider('cloud');
+                    } else {
+                        useCloud = false;
+                        ollamaOnline = data.ollama_running || false;
+                        selectProvider('ollama');
+                    }
+                    
+                    updateBannerUI();
+                })
+                .catch((err) => {
+                    console.error('Erro ao verificar status:', err);
+                    updateBannerUI();
+                });
+        }
+        
+        function updateBannerUI() {
+            const banner = document.getElementById('status-banner');
+            const title = document.getElementById('banner-title');
+            const desc = document.getElementById('banner-desc');
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const btnToggle = document.getElementById('btn-toggle');
+            const installCard = document.getElementById('install-card');
+            
+            banner.classList.remove('offline', 'cloud');
+            
+            if (useCloud) {
+                title.textContent = 'Bot IA Cloud';
+                desc.textContent = 'Respostas rápidas via API em nuvem';
+                banner.classList.add('cloud');
+                
+                if (cloudOnline) {
+                    indicator.querySelector('.status-dot').style.background = 
+                        botConfig.bot_ativo ? '#22c55e' : '#f59e0b';
+                    statusText.textContent = botConfig.bot_ativo ? 'Bot Ativo' : 'Bot Pausado';
+                } else {
+                    indicator.querySelector('.status-dot').style.background = '#ef4444';
+                    statusText.textContent = 'API não conectada';
+                }
+                
+                btnToggle.innerHTML = botConfig.bot_ativo 
+                    ? '<i class="bi bi-pause-circle"></i> Pausar Bot'
+                    : '<i class="bi bi-power"></i> Ativar Bot';
+                btnToggle.className = botConfig.bot_ativo ? 'btn btn-warning' : 'btn btn-light';
+                if (installCard) installCard.style.display = 'none';
+            } else {
+                title.textContent = 'Bot IA Local';
+                desc.textContent = 'IA rodando localmente com Ollama';
+                
+                if (ollamaOnline) {
+                    indicator.querySelector('.status-dot').style.background = 
+                        botConfig.bot_ativo ? '#22c55e' : '#f59e0b';
+                    statusText.textContent = botConfig.bot_ativo ? 'Bot Ativo' : 'Bot Pausado';
+                    btnToggle.innerHTML = botConfig.bot_ativo 
+                        ? '<i class="bi bi-pause-circle"></i> Pausar Bot'
+                        : '<i class="bi bi-power"></i> Ativar Bot';
+                    btnToggle.className = botConfig.bot_ativo ? 'btn btn-warning' : 'btn btn-light';
+                    if (installCard) installCard.style.display = 'none';
+                } else {
+                    banner.classList.add('offline');
+                    indicator.querySelector('.status-dot').style.background = '#ef4444';
+                    statusText.textContent = 'Ollama Offline';
+                    btnToggle.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Reconectar';
+                    btnToggle.className = 'btn btn-light';
+                    if (installCard) installCard.style.display = 'block';
+                }
+            }
+        }
+        
+        function toggleBot() {
+            if (!useCloud && !ollamaOnline) {
+                checkStatus();
+                return;
+            }
+            
+            const novoStatus = !botConfig.bot_ativo;
+            
+            fetch('/api/bot/config', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ ativo: novoStatus ? 1 : 0 })
+            })
+            .then(() => {
+                botConfig.bot_ativo = novoStatus;
+                updateBannerUI();
+            });
+        }
+        
+        // ==================== MODELS ====================
+        function renderModels() {
+            const container = document.getElementById('models-list');
+            container.innerHTML = Object.keys(modelosRecomendados).map(key => {
+                const m = modelosRecomendados[key];
+                return `
+                    <div class="col-md-6">
+                        <div class="model-card ${selectedModel === key ? 'selected' : ''}" 
+                             onclick="selectModel('${key}')">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="name">${m.nome}</div>
+                                <span class="badge bg-${m.badge} badge-ram">${m.ram}</span>
+                            </div>
+                            <div class="ram mt-1">${m.desc}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function selectModel(model) {
+            selectedModel = model;
+            renderModels();
+        }
+        
+        // ==================== PERSONALITIES ====================
+        function renderPersonalities() {
+            const container = document.getElementById('personalities-list');
+            container.innerHTML = personalidadesPadrao.map(p => `
+                <div class="col-md-3">
+                    <div class="personality-card text-center ${selectedPersonality === p.id ? 'active' : ''}"
+                         onclick="selectPersonality('${p.id}')">
+                        <div class="icon">${p.icon}</div>
+                        <div class="fw-bold">${p.nome}</div>
+                        <small class="text-muted">${p.desc}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectPersonality(id) {
+            selectedPersonality = id;
+            renderPersonalities();
+            
+            // Carregar prompt da personalidade
+            const prompts = {
+                'profissional': 'Você é um assistente profissional da Smart Reforço. Seja objetivo, formal e eficiente. Responda de forma clara e direta.',
+                'amigavel': 'Você é um assistente simpático e prestativo da Smart Reforço! 😊 Seja acolhedor, use emojis moderadamente e trate o cliente com carinho.',
+                'vendedor': 'Você é um consultor de vendas da Smart Reforço. Seja persuasivo mas não insistente. Destaque os benefícios, tire dúvidas e guie o cliente para o fechamento.',
+                'custom': ''
+            };
+            
+            document.getElementById('system-prompt').value = prompts[id] || '';
+        }
+        
+        function savePersonality() {
+            const prompt = document.getElementById('system-prompt').value;
+            
+            fetch('/api/bot/personalidades', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    nome: selectedPersonality,
+                    system_prompt: prompt,
+                    ativo: true
+                })
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert('Personalidade salva!');
+            });
+        }
+        
+        // ==================== CONFIG ====================
+        function loadConfig() {
+            fetch('/api/bot/config')
+                .then(r => r.json())
+                .then(config => {
+                    botConfig = config;
+                    document.getElementById('horario-inicio').value = config.horario_inicio || '08:00';
+                    document.getElementById('horario-fim').value = config.horario_fim || '18:00';
+                    document.getElementById('temperatura').value = config.temperatura || 0.7;
+                    document.getElementById('temp-value').textContent = config.temperatura || 0.7;
+                    
+                    // Cloud AI config
+                    if (config.usar_cloud) {
+                        useCloud = true;
+                        selectProvider('cloud');
+                    }
+                    if (config.cloud_api_key) {
+                        document.getElementById('cloud-api-key').value = config.cloud_api_key;
+                    }
+                    if (config.cloud_provider) {
+                        document.getElementById('cloud-provider').value = config.cloud_provider;
+                        onCloudProviderChange();
+                    }
+                    if (config.cloud_model) {
+                        document.getElementById('cloud-model').value = config.cloud_model;
+                    }
+                    
+                    // Dias da semana
+                    if (config.dias_semana) {
+                        const dias = config.dias_semana.split(',').map(d => d.trim());
+                        document.querySelectorAll('.day-toggle').forEach(el => {
+                            el.classList.toggle('active', dias.includes(el.dataset.day));
+                        });
+                    }
+                    
+                    if (config.modelo) {
+                        selectedModel = config.modelo;
+                        renderModels();
+                    }
+                });
+        }
+        
+        function saveConfig() {
+            const dias = Array.from(document.querySelectorAll('.day-toggle.active'))
+                .map(el => el.dataset.day).join(',');
+            
+            const config = {
+                temperatura: parseFloat(document.getElementById('temperatura').value),
+                horario_inicio: document.getElementById('horario-inicio').value,
+                horario_fim: document.getElementById('horario-fim').value,
+                dias_semana: dias,
+                usar_cloud: useCloud ? 1 : 0
+            };
+            
+            if (useCloud) {
+                config.cloud_provider = document.getElementById('cloud-provider').value;
+                config.cloud_api_key = document.getElementById('cloud-api-key').value;
+                config.cloud_model = document.getElementById('cloud-model').value;
+            } else {
+                config.modelo = selectedModel;
+            }
+            
+            fetch('/api/bot/config', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert('Configurações salvas!');
+                checkStatus();
+            });
+        }
+        
+        function toggleDay(el) {
+            el.classList.toggle('active');
+        }
+        
+        // ==================== QUICK RESPONSES ====================
+        function loadQuickResponses() {
+            fetch('/api/bot/respostas-rapidas')
+                .then(r => r.json())
+                .then(data => {
+                    const container = document.getElementById('quick-responses-list');
+                    container.innerHTML = data.map(r => `
+                        <div class="quick-response-item">
+                            <div>
+                                <span class="trigger">${r.gatilho}</span>
+                                <br><small class="text-muted">${r.resposta.substring(0, 60)}...</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteQuickResponse(${r.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                });
+        }
+        
+        function addQuickResponse() {
+            const gatilho = document.getElementById('new-trigger').value;
+            const resposta = document.getElementById('new-response').value;
+            
+            if (!gatilho || !resposta) {
+                alert('Preencha o gatilho e a resposta');
+                return;
+            }
+            
+            fetch('/api/bot/respostas-rapidas', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ gatilho, resposta })
+            })
+            .then(r => r.json())
+            .then(() => {
+                document.getElementById('new-trigger').value = '';
+                document.getElementById('new-response').value = '';
+                loadQuickResponses();
+            });
+        }
+        
+        function deleteQuickResponse(id) {
+            if (!confirm('Remover esta resposta rápida?')) return;
+            
+            fetch(`/api/bot/respostas-rapidas/${id}`, { method: 'DELETE' })
+                .then(() => loadQuickResponses());
+        }
+        
+        // ==================== TEST CHAT ====================
+        function sendTestMessage() {
+            const input = document.getElementById('test-message');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Add loading
+            const loadingId = 'loading-' + Date.now();
+            document.getElementById('chat-messages').innerHTML += `
+                <div class="chat-message bot" id="${loadingId}">
+                    <i class="bi bi-three-dots"></i> Pensando...
+                </div>
+            `;
+            scrollChat();
+            
+            // Send to API
+            fetch('/api/bot/testar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mensagem: message })
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById(loadingId).remove();
+                if (data.success) {
+                    addChatMessage(data.resposta, 'bot');
+                } else {
+                    addChatMessage('Erro: ' + (data.error || 'Falha ao processar'), 'bot');
+                }
+            })
+            .catch(err => {
+                document.getElementById(loadingId).remove();
+                addChatMessage('Erro ao conectar com o bot', 'bot');
+            });
+        }
+        
+        function addChatMessage(text, type) {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML += `<div class="chat-message ${type}">${text}</div>`;
+            scrollChat();
+        }
+        
+        function scrollChat() {
+            const container = document.getElementById('chat-messages');
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>

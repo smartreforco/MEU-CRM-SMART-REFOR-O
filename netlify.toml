@@ -1,0 +1,27 @@
+# Configuração do Netlify para Smart Reforço App
+
+[build]
+  # Diretório do projeto (relativo à raiz)
+  base = "gerenciador_leads/smart-reforco-app"
+  # Comando de build
+  command = "npm run build"
+  # Diretório de saída do build
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Redirecionar todas as rotas para index.html (SPA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de segurança
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Pro - CRM Inteligente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --wa-green: #00a884;
+            --wa-dark: #111b21;
+            --wa-darker: #0b141a;
+            --wa-light: #202c33;
+            --wa-lighter: #2a3942;
+            --wa-border: #2a3942;
+            --wa-text: #e9edef;
+            --wa-text-secondary: #8696a0;
+            --wa-bubble-out: #005c4b;
+            --wa-bubble-in: #202c33;
+            --sidebar-width: 400px;
+            --panel-width: 380px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--wa-darker);
+            color: var(--wa-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* ==================== LAYOUT PRINCIPAL ==================== */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 100%;
+        }
+        
+        /* ==================== SIDEBAR ESQUERDA (Conversas) ==================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--wa-dark);
+            border-right: 1px solid var(--wa-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-header {
+            padding: 10px 16px;
+            background: var(--wa-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        
+        .sidebar-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar-header .logo i {
+            color: var(--wa-green);
+            font-size: 1.5rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-actions .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--wa-text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .header-actions .btn-icon:hover {
+            background: var(--wa-lighter);
+            color: var(--wa-text);
+        }
+        
+        .header-actions .btn-icon.active {
+            color: var(--wa-green);
+        }
+        
+        /* Tabs de Filtro */
+        .filter-tabs {
+            display: flex;
+            padding: 8px 16px;
+            gap: 8px;
+            background: var(--wa-dark);
+            border-bottom: 1px solid var(--wa-border);
+        }
+        
+        .filter-tab {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: var(--wa-lighter);
+            color: var(--wa-text-secondary);
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .filter-tab:hover, .filter-tab.active {
+            background: var(--wa-green);
+            color: white;
+        }
+        
+        .filter-tab .badge {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        /* Busca */
+        .search-box {
+            padding: 8px 12px;
+            background: var(--wa-dark);
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 40px;
+            border-radius: 8px;
+            border: none;
+            background: var(--wa-lighter);
+            color: var(--wa-text);
+            font-size: 0.9rem;
+        }
+        
+        .search-box input::placeholder {
+            color: var(--wa-text-secondary);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--wa-text-secondary);
+        }
+        
+        /* Lista de Conversas */
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .conversation-item {
+            display: flex;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--wa-border);
+            transition: background 0.15s;
+            gap: 12px;
+        }
+        
+        .conversation-item:hover {
+            background: var(--wa-lighter);
+        }
+        
+        .conversation-item.active {
+            background: var(--wa-light);
+        }
+        
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--wa-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .conversation-avatar.online::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 2px solid var(--wa-dark);
+        }
+        
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .conversation-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .conversation-time {
+            font-size: 0.75rem;
+            color: var(--wa-text-secondary);
+        }
+        
+        .conversation-preview {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2px;
+        }
+        
+        .preview-text {
+            font-size: 0.85rem;
+            color: var(--wa-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+        
+        .unread-badge {
+            background: var(--wa-green);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        .stage-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .stage-novo { background: #3b82f6; }
+        .stage-contato { background: #f59e0b; }
+        .stage-negociacao { background: #8b5cf6; }
+        .stage-fechado { background: #22c55e; }
+        .stage-perdido { background: #ef4444; }
+        
+        /* ==================== ÁREA DE CHAT (Centro) ==================== */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--wa-darker);
+            position: relative;
+        }
+        
+        .chat-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23202c33' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .chat-header {
+            padding: 10px 16px;
+            background: var(--wa-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 60px;
+            z-index: 10;
+            border-bottom: 1px solid var(--wa-border);
+        }
+        
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--wa-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .chat-header-info {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .chat-header-name {
+            font-weight: 500;
+        }
+        
+        .chat-header-status {
+            font-size: 0.8rem;
+            color: var(--wa-text-secondary);
+        }
+        
+        .chat-header-status.online {
+            color: var(--wa-green);
+        }
+        
+        .chat-header-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        /* Mensagens */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 5;
+        }
+        
+        .message {
+            max-width: 65%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.incoming {
+            background: var(--wa-bubble-in);
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+        
+        .message.outgoing {
+            background: var(--wa-bubble-out);
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+        
+        .message-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-align: right;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        
+        .message-time .bi-check2-all {
+            color: #53bdeb;
+        }
+        
+        .message.bot-response {
+            border-left: 3px solid var(--wa-green);
+        }
+        
+        .date-divider {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .date-divider span {
+            background: var(--wa-lighter);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--wa-text-secondary);
+        }
+        
+        /* Input de Mensagem */
+        .chat-input-area {
+            padding: 10px 16px;
+            background: var(--wa-light);
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .chat-input-area .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--wa-text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .chat-input-area .btn-icon:hover {
+            color: var(--wa-text);
+        }
+        
+        .chat-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            background: var(--wa-lighter);
+            color: var(--wa-text);
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 120px;
+            min-height: 42px;
+        }
+        
+        .chat-input::placeholder {
+            color: var(--wa-text-secondary);
+        }
+        
+        .btn-send {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--wa-green);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.1s;
+        }
+        
+        .btn-send:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-send:active {
+            transform: scale(0.95);
+        }
+        
+        /* Empty State */
+        .empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--wa-text-secondary);
+            z-index: 5;
+        }
+        
+        .empty-chat i {
+            font-size: 6rem;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+        
+        .empty-chat h3 {
+            color: var(--wa-text);
+            margin-bottom: 10px;
+        }
+        
+        /* ==================== PAINEL DIREITO (Detalhes) ==================== */
+        .detail-panel {
+            width: var(--panel-width);
+            background: var(--wa-dark);
+            border-left: 1px solid var(--wa-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transform: translateX(0);
+            transition: transform 0.3s, width 0.3s;
+        }
+        
+        .detail-panel.collapsed {
+            width: 0;
+            transform: translateX(100%);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 10px 16px;
+            background: var(--wa-light);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 60px;
+            border-bottom: 1px solid var(--wa-border);
+        }
+        
+        .panel-header .btn-close-panel {
+            background: transparent;
+            border: none;
+            color: var(--wa-text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .panel-header h6 {
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Profile Section */
+        .profile-section {
+            text-align: center;
+            padding: 30px 20px;
+            background: var(--wa-light);
+            border-bottom: 8px solid var(--wa-darker);
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--wa-green), #25d366);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+        
+        .profile-name {
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .profile-phone {
+            color: var(--wa-text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        /* Info Sections */
+        .info-section {
+            padding: 15px 20px;
+            border-bottom: 8px solid var(--wa-darker);
+        }
+        
+        .info-section-title {
+            color: var(--wa-green);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+        
+        .info-label {
+            color: var(--wa-text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .info-value {
+            font-size: 0.9rem;
+        }
+        
+        /* CRM Stage Selector */
+        .stage-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .stage-btn {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .stage-btn.stage-novo { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .stage-btn.stage-contato { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .stage-btn.stage-negociacao { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+        .stage-btn.stage-fechado { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .stage-btn.stage-perdido { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        
+        .stage-btn.active {
+            border-color: currentColor;
+        }
+        
+        /* Tags */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background: var(--wa-lighter);
+        }
+        
+        .tag.tag-hot { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .tag.tag-vip { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        
+        /* Notes */
+        .notes-input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-lighter);
+            color: var(--wa-text);
+            font-size: 0.9rem;
+            resize: none;
+            min-height: 80px;
+            margin-top: 8px;
+        }
+        
+        /* Bot Toggle */
+        .bot-toggle-section {
+            padding: 15px 20px;
+            border-bottom: 8px solid var(--wa-darker);
+        }
+        
+        .bot-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .bot-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bot-toggle-label i {
+            font-size: 1.3rem;
+            color: var(--wa-green);
+        }
+        
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--wa-lighter);
+            transition: .4s;
+            border-radius: 28px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--wa-green);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .quick-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            border-radius: 10px;
+            background: var(--wa-lighter);
+            border: none;
+            color: var(--wa-text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-action-btn:hover {
+            background: var(--wa-green);
+        }
+        
+        .quick-action-btn i {
+            font-size: 1.3rem;
+            margin-bottom: 6px;
+        }
+        
+        .quick-action-btn span {
+            font-size: 0.75rem;
+        }
+        
+        /* ==================== MODALS ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--wa-dark);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--wa-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h5 {
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--wa-text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-lighter);
+            color: var(--wa-text);
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--wa-green);
+        }
+        
+        /* ==================== SETTINGS SIDEBAR ==================== */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 400px;
+            height: 100%;
+            background: var(--wa-dark);
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .settings-panel.active {
+            transform: translateX(0);
+        }
+        
+        .settings-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .settings-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .settings-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .setting-group {
+            margin-bottom: 25px;
+        }
+        
+        .setting-group-title {
+            color: var(--wa-green);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--wa-border);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--wa-lighter);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--wa-text-secondary);
+        }
+        
+        /* ==================== LOADING ==================== */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--wa-bubble-in);
+            border-radius: 8px;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--wa-text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+        }
+        
+        .toast {
+            background: var(--wa-light);
+            color: var(--wa-text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .toast.success { border-left: 4px solid var(--wa-green); }
+        .toast.error { border-left: 4px solid #ef4444; }
+        
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1200px) {
+            .detail-panel {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100%;
+                z-index: 50;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 40;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ==================== SIDEBAR ESQUERDA ==================== -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="bi bi-whatsapp"></i>
+                    <span>WhatsApp Pro</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" onclick="openSettings()" title="Configurações">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <button class="btn-icon" onclick="openNewChat()" title="Nova conversa">
+                        <i class="bi bi-chat-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">Todas</button>
+                <button class="filter-tab" data-filter="unread">Não lidas <span class="badge" id="unread-count">0</span></button>
+                <button class="filter-tab" data-filter="bot">🤖 Bot</button>
+            </div>
+            
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="search-input" placeholder="Buscar ou começar uma nova conversa">
+            </div>
+            
+            <div class="conversations-list" id="conversations-list">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+        
+        <!-- ==================== ÁREA DE CHAT ==================== -->
+        <div class="chat-area" id="chat-area">
+            <div class="chat-bg"></div>
+            
+            <!-- Empty state -->
+            <div class="empty-chat" id="empty-chat">
+                <i class="bi bi-chat-square-text"></i>
+                <h3>WhatsApp Pro</h3>
+                <p>Envie e receba mensagens com inteligência artificial integrada</p>
+            </div>
+            
+            <!-- Active chat -->
+            <div class="chat-header" id="chat-header" style="display: none;">
+                <div class="chat-header-avatar" id="header-avatar" onclick="togglePanel()">A</div>
+                <div class="chat-header-info" onclick="togglePanel()">
+                    <div class="chat-header-name" id="header-name">Nome</div>
+                    <div class="chat-header-status" id="header-status">online</div>
+                </div>
+                <div class="chat-header-actions">
+                    <button class="btn-icon" onclick="startCall()" title="Ligar">
+                        <i class="bi bi-telephone"></i>
+                    </button>
+                    <button class="btn-icon" id="btn-toggle-bot" onclick="toggleBotForChat()" title="Ativar/Desativar Bot">
+                        <i class="bi bi-robot"></i>
+                    </button>
+                    <button class="btn-icon" onclick="togglePanel()" title="Informações">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages" style="display: none;">
+                <!-- Messages loaded dynamically -->
+            </div>
+            
+            <div class="chat-input-area" id="chat-input-area" style="display: none;">
+                <button class="btn-icon" title="Anexar">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+                <div class="chat-input-wrapper">
+                    <textarea class="chat-input" id="message-input" placeholder="Digite uma mensagem" rows="1"></textarea>
+                </div>
+                <button class="btn-send" onclick="sendMessage()" id="btn-send">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- ==================== PAINEL DIREITO ==================== -->
+        <div class="detail-panel collapsed" id="detail-panel">
+            <div class="panel-header">
+                <button class="btn-close-panel" onclick="togglePanel()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <h6>Informações do contato</h6>
+            </div>
+            
+            <div class="panel-content">
+                <div class="profile-section">
+                    <div class="profile-avatar" id="panel-avatar">A</div>
+                    <div class="profile-name" id="panel-name">Nome do Lead</div>
+                    <div class="profile-phone" id="panel-phone">+55 11 99999-9999</div>
+                </div>
+                
+                <!-- CRM Stage -->
+                <div class="info-section">
+                    <div class="info-section-title">Etapa do Funil</div>
+                    <div class="stage-selector" id="stage-selector">
+                        <button class="stage-btn stage-novo" data-stage="novo">Novo</button>
+                        <button class="stage-btn stage-contato" data-stage="contato">Contato</button>
+                        <button class="stage-btn stage-negociacao" data-stage="negociacao">Negociação</button>
+                        <button class="stage-btn stage-fechado" data-stage="fechado">Fechado</button>
+                        <button class="stage-btn stage-perdido" data-stage="perdido">Perdido</button>
+                    </div>
+                </div>
+                
+                <!-- Bot Toggle -->
+                <div class="bot-toggle-section">
+                    <div class="bot-toggle">
+                        <div class="bot-toggle-label">
+                            <i class="bi bi-robot"></i>
+                            <div>
+                                <div>Bot IA</div>
+                                <small style="color: var(--wa-text-secondary);">Respostas automáticas</small>
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="bot-enabled-toggle" onchange="toggleBotForLead()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Tags -->
+                <div class="info-section">
+                    <div class="info-section-title">Tags</div>
+                    <div class="tags-container" id="tags-container">
+                        <span class="tag tag-hot">🔥 Hot Lead</span>
+                        <span class="tag tag-vip">⭐ VIP</span>
+                    </div>
+                </div>
+                
+                <!-- Info -->
+                <div class="info-section">
+                    <div class="info-section-title">Informações</div>
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value" id="panel-email">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Origem</span>
+                        <span class="info-value" id="panel-origem">WhatsApp</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Primeiro contato</span>
+                        <span class="info-value" id="panel-created">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mensagens</span>
+                        <span class="info-value" id="panel-msg-count">0</span>
+                    </div>
+                </div>
+                
+                <!-- Notes -->
+                <div class="info-section">
+                    <div class="info-section-title">Observações</div>
+                    <textarea class="notes-input" id="lead-notes" placeholder="Adicione notas sobre este lead..." onblur="saveNotes()"></textarea>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="copyPhone()">
+                        <i class="bi bi-clipboard"></i>
+                        <span>Copiar</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="exportLead()">
+                        <i class="bi bi-download"></i>
+                        <span>Exportar</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="deleteLead()">
+                        <i class="bi bi-trash"></i>
+                        <span>Excluir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== SETTINGS PANEL ==================== -->
+    <div class="settings-backdrop" id="settings-backdrop" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settings-panel">
+        <div class="panel-header">
+            <button class="btn-close-panel" onclick="closeSettings()">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <h6>Configurações</h6>
+        </div>
+        
+        <div class="settings-content">
+            <!-- Bot Config -->
+            <div class="setting-group">
+                <div class="setting-group-title">🤖 Bot IA</div>
+                
+                <div class="setting-item">
+                    <div>
+                        <div>Bot Ativo</div>
+                        <small style="color: var(--wa-text-secondary);">Responder automaticamente</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="global-bot-toggle" onchange="toggleGlobalBot()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label">Provedor de IA</label>
+                    <select class="form-control" id="ai-provider" onchange="onAIProviderChange()">
+                        <option value="gemini">☁️ Google Gemini (Grátis)</option>
+                        <option value="ollama">💻 Ollama Local</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="api-key-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" class="form-control" id="api-key-input" placeholder="Cole sua API Key">
+                    <small style="color: var(--wa-text-secondary);">
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--wa-green);">
+                            Obter API Key gratuita →
+                        </a>
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Modelo</label>
+                    <select class="form-control" id="ai-model">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Rápido)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Capaz)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Personalidade do Bot</label>
+                    <textarea class="form-control" id="bot-personality" rows="4" placeholder="Defina como o bot deve se comportar..."></textarea>
+                </div>
+                
+                <button class="btn btn-success w-100" onclick="saveSettings()">
+                    <i class="bi bi-save"></i> Salvar Configurações
+                </button>
+            </div>
+            
+            <!-- WhatsApp Connection -->
+            <div class="setting-group">
+                <div class="setting-group-title">📱 Conexão WhatsApp</div>
+                
+                <div class="setting-item">
+                    <div>
+                        <div>Status</div>
+                        <small id="wa-status" style="color: var(--wa-green);">Conectado</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-light" onclick="checkConnection()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Responses -->
+            <div class="setting-group">
+                <div class="setting-group-title">⚡ Respostas Rápidas</div>
+                <div id="quick-responses-list"></div>
+                <button class="btn btn-outline-light btn-sm w-100 mt-2" onclick="addQuickResponse()">
+                    <i class="bi bi-plus"></i> Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== NEW CHAT MODAL ==================== -->
+    <div class="modal-overlay" id="new-chat-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Nova Conversa</h5>
+                <button class="btn-close-panel" onclick="closeNewChat()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Número do WhatsApp</label>
+                    <input type="text" class="form-control" id="new-phone" placeholder="55119999999999">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nome (opcional)</label>
+                    <input type="text" class="form-control" id="new-name" placeholder="Nome do contato">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mensagem</label>
+                    <textarea class="form-control" id="new-message" rows="3" placeholder="Olá! Como posso ajudar?"></textarea>
+                </div>
+                <button class="btn btn-success w-100" onclick="startNewChat()">
+                    <i class="bi bi-send"></i> Iniciar Conversa
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== STATE ====================
+        let leads = [];
+        let currentLead = null;
+        let messages = [];
+        let settings = {
+            botAtivo: false,
+            provider: 'gemini',
+            apiKey: '',
+            model: 'gemini-2.5-flash',
+            personality: ''
+        };
+        
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLeads();
+            loadSettings();
+            setupEventListeners();
+            
+            // Auto-refresh
+            setInterval(loadLeads, 10000);
+        });
+        
+        function setupEventListeners() {
+            // Search
+            document.getElementById('search-input').addEventListener('input', filterLeads);
+            
+            // Filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    filterLeads();
+                });
+            });
+            
+            // Message input
+            const messageInput = document.getElementById('message-input');
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Auto-resize textarea
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            });
+            
+            // Stage buttons
+            document.querySelectorAll('.stage-btn').forEach(btn => {
+                btn.addEventListener('click', () => updateLeadStage(btn.dataset.stage));
+            });
+        }
+        
+        // ==================== API CALLS ====================
+        async function loadLeads() {
+            try {
+                const response = await fetch('/api/leads?per_page=100');
+                leads = await response.json();
+                renderLeads();
+                updateUnreadCount();
+            } catch (error) {
+                console.error('Erro ao carregar leads:', error);
+            }
+        }
+        
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/bot/config');
+                const config = await response.json();
+                
+                settings.botAtivo = config.ativo || false;
+                settings.provider = config.usar_cloud ? 'gemini' : 'ollama';
+                settings.apiKey = config.cloud_api_key || '';
+                settings.model = config.cloud_model || 'gemini-2.5-flash';
+                
+                document.getElementById('global-bot-toggle').checked = settings.botAtivo;
+                document.getElementById('ai-provider').value = settings.provider;
+                document.getElementById('api-key-input').value = settings.apiKey;
+                document.getElementById('ai-model').value = settings.model;
+                
+                // Load personality
+                const persResponse = await fetch('/api/bot/personalidades');
+                const personalities = await persResponse.json();
+                if (personalities.length > 0) {
+                    settings.personality = personalities[0].system_prompt || '';
+                    document.getElementById('bot-personality').value = settings.personality;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+            }
+        }
+        
+        async function loadMessages(leadId) {
+            try {
+                const response = await fetch(`/api/leads/${leadId}/mensagens`);
+                messages = await response.json();
+                renderMessages();
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+        
+        // ==================== RENDER ====================
+        function renderLeads() {
+            const container = document.getElementById('conversations-list');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-tab.active').dataset.filter;
+            
+            let filteredLeads = leads;
+            
+            // Apply search
+            if (searchTerm) {
+                filteredLeads = filteredLeads.filter(l => 
+                    (l.nome || '').toLowerCase().includes(searchTerm) ||
+                    (l.telefone || '').includes(searchTerm)
+                );
+            }
+            
+            // Apply filter
+            if (activeFilter === 'unread') {
+                filteredLeads = filteredLeads.filter(l => l.nao_lidas > 0);
+            } else if (activeFilter === 'bot') {
+                filteredLeads = filteredLeads.filter(l => l.bot_ativo);
+            }
+            
+            container.innerHTML = filteredLeads.map(lead => {
+                const initials = getInitials(lead.nome || lead.telefone);
+                const isActive = currentLead && currentLead.id === lead.id;
+                const stageClass = `stage-${(lead.estagio_funil || 'novo').toLowerCase()}`;
+                
+                return `
+                    <div class="conversation-item ${isActive ? 'active' : ''}" onclick="selectLead(${lead.id})">
+                        <div class="conversation-avatar ${lead.online ? 'online' : ''}">${initials}</div>
+                        <div class="conversation-info">
+                            <div class="conversation-header">
+                                <span class="conversation-name">${lead.nome || lead.telefone}</span>
+                                <span class="conversation-time">${formatTime(lead.ultima_msg)}</span>
+                            </div>
+                            <div class="conversation-preview">
+                                <span class="preview-text">
+                                    ${lead.bot_ativo ? '🤖 ' : ''}${lead.ultima_mensagem || 'Nenhuma mensagem'}
+                                </span>
+                                ${lead.nao_lidas > 0 ? `<span class="unread-badge">${lead.nao_lidas}</span>` : ''}
+                                <span class="stage-indicator ${stageClass}"></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('chat-messages');
+            let lastDate = null;
+            
+            container.innerHTML = messages.map(msg => {
+                let html = '';
+                const msgDate = new Date(msg.created_at).toLocaleDateString();
+                
+                if (msgDate !== lastDate) {
+                    html += `<div class="date-divider"><span>${msgDate}</span></div>`;
+                    lastDate = msgDate;
+                }
+                
+                const isOutgoing = msg.tipo === 'enviada' || msg.direcao === 'outgoing';
+                const isBotResponse = msg.bot_response || false;
+                
+                html += `
+                    <div class="message ${isOutgoing ? 'outgoing' : 'incoming'} ${isBotResponse ? 'bot-response' : ''}">
+                        <div class="message-text">${msg.conteudo || msg.mensagem}</div>
+                        <div class="message-time">
+                            ${formatTime(msg.created_at)}
+                            ${isOutgoing ? '<i class="bi bi-check2-all"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+                
+                return html;
+            }).join('');
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // ==================== ACTIONS ====================
+        async function selectLead(leadId) {
+            currentLead = leads.find(l => l.id === leadId);
+            if (!currentLead) return;
+            
+            // Update UI
+            document.getElementById('empty-chat').style.display = 'none';
+            document.getElementById('chat-header').style.display = 'flex';
+            document.getElementById('chat-messages').style.display = 'flex';
+            document.getElementById('chat-input-area').style.display = 'flex';
+            
+            // Update header
+            const initials = getInitials(currentLead.nome || currentLead.telefone);
+            document.getElementById('header-avatar').textContent = initials;
+            document.getElementById('header-name').textContent = currentLead.nome || currentLead.telefone;
+            document.getElementById('header-status').textContent = currentLead.online ? 'online' : 'offline';
+            document.getElementById('header-status').className = 'chat-header-status ' + (currentLead.online ? 'online' : '');
+            
+            // Update bot icon
+            const botBtn = document.getElementById('btn-toggle-bot');
+            botBtn.classList.toggle('active', currentLead.bot_ativo);
+            
+            // Update panel
+            document.getElementById('panel-avatar').textContent = initials;
+            document.getElementById('panel-name').textContent = currentLead.nome || currentLead.telefone;
+            document.getElementById('panel-phone').textContent = formatPhone(currentLead.telefone);
+            document.getElementById('panel-email').textContent = currentLead.email || '-';
+            document.getElementById('panel-origem').textContent = currentLead.origem || 'WhatsApp';
+            document.getElementById('panel-created').textContent = new Date(currentLead.created_at).toLocaleDateString();
+            document.getElementById('lead-notes').value = currentLead.observacoes || '';
+            document.getElementById('bot-enabled-toggle').checked = currentLead.bot_ativo || false;
+            
+            // Update stage
+            document.querySelectorAll('.stage-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.stage === (currentLead.estagio_funil || 'novo'));
+            });
+            
+            // Load messages
+            await loadMessages(leadId);
+            
+            // Re-render leads to show active state
+            renderLeads();
+            
+            // Mark as read
+            markAsRead(leadId);
+        }
+        
+        async function sendMessage() {
+            if (!currentLead) return;
+            
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Add message to UI immediately
+            messages.push({
+                conteudo: text,
+                tipo: 'enviada',
+                created_at: new Date().toISOString()
+            });
+            renderMessages();
+            
+            try {
+                await fetch(`/api/leads/${currentLead.id}/mensagens`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mensagem: text })
+                });
+                
+                showToast('Mensagem enviada!', 'success');
+            } catch (error) {
+                showToast('Erro ao enviar mensagem', 'error');
+            }
+        }
+        
+        async function updateLeadStage(stage) {
+            if (!currentLead) return;
+            
+            try {
+                await fetch(`/api/leads/${currentLead.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ estagio_funil: stage })
+                });
+                
+                currentLead.estagio_funil = stage;
+                
+                document.querySelectorAll('.stage-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.stage === stage);
+                });
+                
+                loadLeads();
+                showToast('Etapa atualizada!', 'success');
+            } catch (error) {
+                showToast('Erro ao atualizar etapa', 'error');
+            }
+        }
+        
+        async function toggleBotForLead() {
+            if (!currentLead) return;
+            
+            const enabled = document.getElementById('bot-enabled-toggle').checked;
+            
+            try {
+                await fetch(`/api/leads/${currentLead.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bot_ativo: enabled })
+                });
+                
+                currentLead.bot_ativo = enabled;
+                document.getElementById('btn-toggle-bot').classList.toggle('active', enabled);
+                
+                loadLeads();
+                showToast(enabled ? 'Bot ativado para este contato!' : 'Bot desativado', 'success');
+            } catch (error) {
+                showToast('Erro ao atualizar bot', 'error');
+            }
+        }
+        
+        function toggleBotForChat() {
+            const toggle = document.getElementById('bot-enabled-toggle');
+            toggle.checked = !toggle.checked;
+            toggleBotForLead();
+        }
+        
+        async function toggleGlobalBot() {
+            const enabled = document.getElementById('global-bot-toggle').checked;
+            
+            try {
+                await fetch('/api/bot/config', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ativo: enabled ? 1 : 0 })
+                });
+                
+                settings.botAtivo = enabled;
+                showToast(enabled ? 'Bot IA ativado!' : 'Bot IA desativado', 'success');
+            } catch (error) {
+                showToast('Erro ao atualizar bot', 'error');
+            }
+        }
+        
+        async function saveSettings() {
+            const provider = document.getElementById('ai-provider').value;
+            const apiKey = document.getElementById('api-key-input').value;
+            const model = document.getElementById('ai-model').value;
+            const personality = document.getElementById('bot-personality').value;
+            
+            try {
+                // Save bot config
+                await fetch('/api/bot/config', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        usar_cloud: provider === 'gemini' ? 1 : 0,
+                        cloud_provider: 'gemini',
+                        cloud_api_key: apiKey,
+                        cloud_model: model
+                    })
+                });
+                
+                // Save personality
+                if (personality) {
+                    await fetch('/api/bot/personalidades', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            nome: 'Principal',
+                            system_prompt: personality,
+                            ativo: true
+                        })
+                    });
+                }
+                
+                showToast('Configurações salvas!', 'success');
+                closeSettings();
+            } catch (error) {
+                showToast('Erro ao salvar configurações', 'error');
+            }
+        }
+        
+        async function saveNotes() {
+            if (!currentLead) return;
+            
+            const notes = document.getElementById('lead-notes').value;
+            
+            try {
+                await fetch(`/api/leads/${currentLead.id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ observacoes: notes })
+                });
+            } catch (error) {
+                console.error('Erro ao salvar notas:', error);
+            }
+        }
+        
+        async function markAsRead(leadId) {
+            try {
+                await fetch(`/api/leads/${leadId}/marcar-lida`, { method: 'POST' });
+                loadLeads();
+            } catch (error) {
+                console.error('Erro ao marcar como lida:', error);
+            }
+        }
+        
+        async function startNewChat() {
+            const phone = document.getElementById('new-phone').value.replace(/\D/g, '');
+            const name = document.getElementById('new-name').value;
+            const message = document.getElementById('new-message').value;
+            
+            if (!phone) {
+                showToast('Informe o número', 'error');
+                return;
+            }
+            
+            try {
+                // Create lead
+                const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        telefone: phone,
+                        nome: name || null,
+                        origem: 'Manual'
+                    })
+                });
+                
+                const lead = await response.json();
+                
+                // Send message if provided
+                if (message) {
+                    await fetch(`/api/leads/${lead.id}/mensagens`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ mensagem: message })
+                    });
+                }
+                
+                closeNewChat();
+                loadLeads();
+                setTimeout(() => selectLead(lead.id), 500);
+                
+                showToast('Conversa iniciada!', 'success');
+            } catch (error) {
+                showToast('Erro ao iniciar conversa', 'error');
+            }
+        }
+        
+        // ==================== UI HELPERS ====================
+        function togglePanel() {
+            document.getElementById('detail-panel').classList.toggle('collapsed');
+        }
+        
+        function openSettings() {
+            document.getElementById('settings-panel').classList.add('active');
+            document.getElementById('settings-backdrop').classList.add('active');
+        }
+        
+        function closeSettings() {
+            document.getElementById('settings-panel').classList.remove('active');
+            document.getElementById('settings-backdrop').classList.remove('active');
+        }
+        
+        function openNewChat() {
+            document.getElementById('new-chat-modal').classList.add('active');
+        }
+        
+        function closeNewChat() {
+            document.getElementById('new-chat-modal').classList.remove('active');
+            document.getElementById('new-phone').value = '';
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-message').value = '';
+        }
+        
+        function onAIProviderChange() {
+            const provider = document.getElementById('ai-provider').value;
+            document.getElementById('api-key-group').style.display = provider === 'gemini' ? 'block' : 'none';
+        }
+        
+        function filterLeads() {
+            renderLeads();
+        }
+        
+        function updateUnreadCount() {
+            const count = leads.filter(l => l.nao_lidas > 0).length;
+            document.getElementById('unread-count').textContent = count;
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function copyPhone() {
+            if (!currentLead) return;
+            navigator.clipboard.writeText(currentLead.telefone);
+            showToast('Número copiado!', 'success');
+        }
+        
+        function startCall() {
+            if (!currentLead) return;
+            window.open(`tel:${currentLead.telefone}`, '_blank');
+        }
+        
+        async function deleteLead() {
+            if (!currentLead) return;
+            if (!confirm('Excluir este contato?')) return;
+            
+            try {
+                await fetch(`/api/leads/${currentLead.id}`, { method: 'DELETE' });
+                currentLead = null;
+                document.getElementById('empty-chat').style.display = 'flex';
+                document.getElementById('chat-header').style.display = 'none';
+                document.getElementById('chat-messages').style.display = 'none';
+                document.getElementById('chat-input-area').style.display = 'none';
+                togglePanel();
+                loadLeads();
+                showToast('Contato excluído!', 'success');
+            } catch (error) {
+                showToast('Erro ao excluir', 'error');
+            }
+        }
+        
+        // ==================== UTILS ====================
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+        
+        function formatPhone(phone) {
+            if (!phone) return '';
+            const cleaned = phone.replace(/\D/g, '');
+            if (cleaned.length === 13) {
+                return `+${cleaned.slice(0,2)} ${cleaned.slice(2,4)} ${cleaned.slice(4,9)}-${cleaned.slice(9)}`;
+            }
+            return phone;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 86400000 && date.getDate() === now.getDate()) {
+                return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            } else if (diff < 172800000) {
+                return 'Ontem';
+            } else {
+                return date.toLocaleDateString('pt-BR');
+            }
+        }
+        
+        async function checkConnection() {
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const data = await response.json();
+                document.getElementById('wa-status').textContent = data.connected ? 'Conectado' : 'Desconectado';
+                document.getElementById('wa-status').style.color = data.connected ? 'var(--wa-green)' : '#ef4444';
+            } catch (error) {
+                document.getElementById('wa-status').textContent = 'Erro';
+                document.getElementById('wa-status').style.color = '#ef4444';
+            }
+        }
+        
+        function exportLead() {
+            if (!currentLead) return;
+            const data = JSON.stringify(currentLead, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lead_${currentLead.id}.json`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
