@@ -10,8 +10,8 @@ import { useState, useEffect, useRef } from 'react'
 import { 
   Bot, Zap, Video, Save, Settings,
   Plus, Trash2, Edit3, FileText, CheckCircle, 
-  XCircle, Sparkles, Copy, X, Upload, Send, Loader2,
-  Image as ImageIcon, Check, AlertCircle
+  XCircle, Sparkles, Copy, X, Upload,
+  Image as ImageIcon, Check, AlertCircle, Send, Loader2
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 

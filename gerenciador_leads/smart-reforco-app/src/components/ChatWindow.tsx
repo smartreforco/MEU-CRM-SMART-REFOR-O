@@ -8,9 +8,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { 
   Send, Smile, Paperclip, Mic, MoreVertical,
-  Image as ImageIcon, FileText, MapPin, Video, User,
+  Image as ImageIcon, FileText, MapPin, Video,
   Check, CheckCheck, Clock, X, Zap, Calendar, StickyNote,
-  Info, Pencil, Loader2, Plus, Trash2, MessageSquare, Cloud, RefreshCw
+  Info, Pencil, Plus, Trash2, MessageSquare, Cloud, RefreshCw,
+  Loader2, User
 } from 'lucide-react'
 import { useWhatsApp } from '../hooks/useWhatsApp'
 import { supabase } from '../lib/supabase'

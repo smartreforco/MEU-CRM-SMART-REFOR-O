@@ -7,9 +7,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { 
-  X, Send, Smile, Paperclip, 
-  Check, CheckCheck, Clock, Maximize2,
-  FileText, Mic, Image as ImageIcon, Video, Loader2
+  X, Send, Smile,
+  Check, CheckCheck, Maximize2,
+  FileText, Image as ImageIcon, Video, Loader2,
+  Clock, Paperclip, Mic
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Mp3Encoder } from '@breezystack/lamejs'
